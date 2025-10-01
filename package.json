@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
+    "vercel-build": "npx prisma generate && npx prisma db push && next build",
+    "postinstall": "npx prisma generate",
     "clean": "rd /s /q .next node_modules 2>nul && del package-lock.json 2>nul && npm cache clean --force && npm install && npx prisma generate",
     "reset": "taskkill /f /im node.exe 2>nul && npm run clean",
     "fresh-start": "npm run clean:cache && npm install && npm run dev",
