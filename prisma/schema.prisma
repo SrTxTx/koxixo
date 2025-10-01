@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String
+  role      String   // ADMIN, VENDEDOR, ORCAMENTO, PRODUCAO
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos - pedidos criados
+  createdOrders Order[] @relation("CreatedBy")
+  
+  // Relacionamentos - ações em pedidos
+  approvedOrders  Order[] @relation("ApprovedBy")
+  rejectedOrders  Order[] @relation("RejectedBy")
+  completedOrders Order[] @relation("CompletedBy")
+  deliveredOrders Order[] @relation("DeliveredBy")
+
+  @@map("users")
+}
+
+model Order {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  value       Float?
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, IN_PROGRESS, COMPLETED, DELIVERED, CANCELLED
+  priority    String   @default("MEDIUM")  // HIGH, MEDIUM, LOW
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  dueDate     DateTime?
+
+  // Quem criou
+  createdById Int
+  createdBy   User @relation("CreatedBy", fields: [createdById], references: [id])
+
+  // Quem aprovou
+  approvedAt   DateTime?
+  approvedById Int?
+  approvedBy   User? @relation("ApprovedBy", fields: [approvedById], references: [id])
+
+  // Quem rejeitou
+  rejectedAt     DateTime?
+  rejectedById   Int?
+  rejectedBy     User? @relation("RejectedBy", fields: [rejectedById], references: [id])
+  rejectionReason String?
+
+  // Quem completou a produção
+  completedAt   DateTime?
+  completedById Int?
+  completedBy   User? @relation("CompletedBy", fields: [completedById], references: [id])
+
+  // Quem marcou como entregue
+  deliveredAt   DateTime?
+  deliveredById Int?
+  deliveredBy   User? @relation("DeliveredBy", fields: [deliveredById], references: [id])
+
+  @@map("orders")
+}
