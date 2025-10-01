@@ -57,7 +57,7 @@ git commit -m "feat: Sistema completo de gestão de pedidos
 #### 4. Criar Repositório no GitHub
 1. Acesse https://github.com
 2. Clique em "New repository"
-3. Nome: `koxixo-sistema-pedidos`
+3. Nome: `koxixo`
 4. Descrição: `Sistema de gestão de pedidos com Next.js e TypeScript`
 5. Marque como **Público** ou **Privado**
 6. **NÃO** marque "Add a README file" (já temos um)
@@ -65,7 +65,7 @@ git commit -m "feat: Sistema completo de gestão de pedidos
 
 #### 5. Conectar Repositório Local ao GitHub
 ```bash
-git remote add origin https://github.com/SEU_USUARIO/koxixo-sistema-pedidos.git
+git remote add origin https://github.com/SEU_USUARIO/koxixo.git
 git branch -M main
 git push -u origin main
 ```
@@ -103,8 +103,8 @@ Após subir no GitHub:
 
 ## 🔗 URLs Sugeridas
 
-- **Repositório**: `koxixo-sistema-pedidos`
-- **Demo**: `koxixo-sistema-pedidos.vercel.app`
+- **Repositório**: `koxixo`
+- **Demo**: `koxixo.vercel.app`
 - **Documentação**: No próprio README.md
 
 ## 🎯 Próximos Passos
