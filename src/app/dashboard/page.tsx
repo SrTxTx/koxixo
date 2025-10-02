@@ -49,7 +49,7 @@ export default function DashboardPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
       </div>
     )
   }
@@ -75,7 +75,7 @@ export default function DashboardPage() {
               <div className="flex items-center space-x-2">
                 <User className="h-5 w-5 text-gray-600" />
                 <span className="text-sm text-gray-700">{session.user.name}</span>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
                   {session.user.role}
                 </span>
               </div>
@@ -96,7 +96,7 @@ export default function DashboardPage() {
           <nav className="mt-8 px-4 space-y-2">
             <Link
               href="/dashboard"
-              className="flex items-center px-4 py-2 text-gray-900 bg-blue-50 rounded-lg"
+              className="flex items-center px-4 py-2 text-gray-900 bg-red-50 rounded-lg"
             >
               <BarChart3 className="h-5 w-5 mr-3" />
               Dashboard
@@ -213,16 +213,16 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-8">
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <User className="h-5 w-5 text-blue-400" />
+                  <User className="h-5 w-5 text-red-400" />
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">
+                  <h3 className="text-sm font-medium text-red-800">
                     Bem-vindo, {session.user.name}!
                   </h3>
-                  <div className="mt-2 text-sm text-blue-700">
+                  <div className="mt-2 text-sm text-red-700">
                     <p>
                       Perfil: <strong>{session.user.role}</strong>
                     </p>

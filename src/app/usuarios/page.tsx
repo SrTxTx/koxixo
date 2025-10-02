@@ -144,7 +144,7 @@ export default function UsuariosPage() {
   const getRoleColor = (role: string) => {
     const colors = {
       'ADMIN': 'bg-red-100 text-red-800',
-      'VENDEDOR': 'bg-blue-100 text-blue-800',
+      'VENDEDOR': 'bg-red-100 text-red-800',
       'ORCAMENTO': 'bg-yellow-100 text-yellow-800',
       'PRODUCAO': 'bg-green-100 text-green-800'
     }
@@ -163,9 +163,9 @@ export default function UsuariosPage() {
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
-        <div className="flex items-center justify-center h-16 bg-blue-600">
+        <div className="flex items-center justify-center h-16 bg-red-600">
           <h1 className="text-white text-xl font-bold">
-            K<span className="text-blue-200">o</span>xix<span className="text-blue-200">o</span>
+            K<span className="text-red-200">o</span>xix<span className="text-red-200">o</span>
           </h1>
         </div>
         <nav className="mt-5 px-2">
@@ -234,14 +234,14 @@ export default function UsuariosPage() {
               <input
                 type="text"
                 placeholder="Buscar usuários..."
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <button
               onClick={() => setCreatingUser(true)}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
             >
               <PlusCircle className="h-5 w-5 mr-2" />
               Novo Usuário
@@ -278,7 +278,7 @@ export default function UsuariosPage() {
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => openEditModal(user)}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="text-red-600 hover:text-red-900"
                         >
                           <Edit className="h-5 w-5" />
                         </button>
@@ -310,7 +310,7 @@ export default function UsuariosPage() {
                   <input
                     type="text"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     value={userForm.name}
                     onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
                   />
@@ -320,7 +320,7 @@ export default function UsuariosPage() {
                   <input
                     type="email"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     value={userForm.email}
                     onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                   />
@@ -328,7 +328,7 @@ export default function UsuariosPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Cargo</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     value={userForm.role}
                     onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
                   >
@@ -344,7 +344,7 @@ export default function UsuariosPage() {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                       value={userForm.password}
                       onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                     />
@@ -370,7 +370,7 @@ export default function UsuariosPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                   >
                     Criar Usuário
                   </button>
@@ -393,7 +393,7 @@ export default function UsuariosPage() {
                   <input
                     type="text"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     value={userForm.name}
                     onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
                   />
@@ -403,7 +403,7 @@ export default function UsuariosPage() {
                   <input
                     type="email"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     value={userForm.email}
                     onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
                   />
@@ -411,7 +411,7 @@ export default function UsuariosPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Cargo</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     value={userForm.role}
                     onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
                   >
@@ -426,7 +426,7 @@ export default function UsuariosPage() {
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                       value={userForm.password}
                       onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                     />
@@ -452,7 +452,7 @@ export default function UsuariosPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                   >
                     Salvar Alterações
                   </button>

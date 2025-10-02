@@ -53,7 +53,7 @@ export default function NovoPedidoPage() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
       </div>
     )
   }
@@ -83,7 +83,7 @@ export default function NovoPedidoPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
               />
             </div>
 
@@ -97,7 +97,7 @@ export default function NovoPedidoPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 required
                 rows={4}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
               ></textarea>
             </div>
 
@@ -112,7 +112,7 @@ export default function NovoPedidoPage() {
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
                   step="0.01"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                 />
               </div>
 
@@ -124,7 +124,7 @@ export default function NovoPedidoPage() {
                   id="priority"
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                 >
                   <option value="NORMAL">Normal</option>
                   <option value="HIGH">Alta</option>
@@ -141,7 +141,7 @@ export default function NovoPedidoPage() {
                   id="dueDate"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
                 />
               </div>
             </div>
@@ -156,7 +156,7 @@ export default function NovoPedidoPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition-colors disabled:bg-blue-400"
+                className="bg-red-600 text-white px-6 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors disabled:bg-red-400"
               >
                 {loading ? 'Salvando...' : 'Salvar Pedido'}
               </button>

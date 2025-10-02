@@ -172,7 +172,7 @@ export default function PedidosPage() {
         <button
           key="start"
           onClick={() => handleOrderAction(order.id, 'start_production')}
-          className="text-blue-600 hover:text-blue-800 text-sm px-2 py-1 rounded border border-blue-300 hover:bg-blue-50"
+          className="text-red-600 hover:text-red-800 text-sm px-2 py-1 rounded border border-red-300 hover:bg-red-50"
         >
           Iniciar Produção
         </button>
