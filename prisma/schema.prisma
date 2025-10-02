@@ -20,7 +20,7 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relacionamentos - pedidos criados
-  createdOrders Order[] @relation("CreatedBy")
+  createdOrders   Order[] @relation("CreatedBy")
   
   // Relacionamentos - ações em pedidos
   approvedOrders  Order[] @relation("ApprovedBy")
@@ -40,31 +40,31 @@ model Order {
   priority    String   @default("MEDIUM")  // HIGH, MEDIUM, LOW
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-  dueDate     DateTime?
+  dueDate     DateTime? @map("due_date")
 
   // Quem criou
-  createdById Int
+  createdById Int @map("created_by_id")
   createdBy   User @relation("CreatedBy", fields: [createdById], references: [id])
 
   // Quem aprovou
-  approvedAt   DateTime?
-  approvedById Int?
+  approvedAt   DateTime? @map("approved_at")
+  approvedById Int? @map("approved_by_id")
   approvedBy   User? @relation("ApprovedBy", fields: [approvedById], references: [id])
 
   // Quem rejeitou
-  rejectedAt     DateTime?
-  rejectedById   Int?
-  rejectedBy     User? @relation("RejectedBy", fields: [rejectedById], references: [id])
-  rejectionReason String?
+  rejectedAt      DateTime? @map("rejected_at")
+  rejectedById    Int? @map("rejected_by_id")
+  rejectedBy      User? @relation("RejectedBy", fields: [rejectedById], references: [id])
+  rejectionReason String? @map("rejection_reason")
 
   // Quem completou a produção
-  completedAt   DateTime?
-  completedById Int?
+  completedAt   DateTime? @map("completed_at")
+  completedById Int? @map("completed_by_id")
   completedBy   User? @relation("CompletedBy", fields: [completedById], references: [id])
 
   // Quem marcou como entregue
-  deliveredAt   DateTime?
-  deliveredById Int?
+  deliveredAt   DateTime? @map("delivered_at")
+  deliveredById Int? @map("delivered_by_id")
   deliveredBy   User? @relation("DeliveredBy", fields: [deliveredById], references: [id])
 
   @@map("orders")
