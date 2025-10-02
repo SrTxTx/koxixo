@@ -136,7 +136,7 @@ export default function PedidosPage() {
       <button
         key="view"
         onClick={() => setViewingOrder(order)}
-        className="text-blue-600 hover:text-blue-800 text-sm px-2 py-1 rounded border border-blue-300 hover:bg-blue-50 flex items-center space-x-1"
+        className="text-red-600 hover:text-red-800 text-sm px-2 py-1 rounded border border-red-300 hover:bg-red-50 flex items-center space-x-1"
       >
         <Eye className="h-3 w-3" />
         <span>Detalhes</span>
@@ -211,7 +211,7 @@ export default function PedidosPage() {
         <button
           key="resubmit"
           onClick={() => handleOrderAction(order.id, 'resubmit')}
-          className="text-blue-600 hover:text-blue-800 text-sm px-2 py-1 rounded border border-blue-300 hover:bg-blue-50"
+          className="text-red-600 hover:text-red-800 text-sm px-2 py-1 rounded border border-red-300 hover:bg-red-50"
         >
           Reenviar para Aprovação
         </button>
@@ -238,8 +238,8 @@ export default function PedidosPage() {
   const getStatusClass = (status: string) => {
     switch (status) {
       case 'PENDING': return 'bg-yellow-100 text-yellow-800'
-      case 'APPROVED': return 'bg-blue-100 text-blue-800'
-      case 'REJECTED': return 'bg-red-100 text-red-800'
+      case 'APPROVED': return 'bg-red-100 text-red-800'
+      case 'REJECTED': return 'bg-gray-100 text-gray-800'
       case 'IN_PROGRESS': return 'bg-indigo-100 text-indigo-800'
       case 'COMPLETED': return 'bg-green-100 text-green-800'
       case 'DELIVERED': return 'bg-purple-100 text-purple-800'
@@ -286,7 +286,7 @@ export default function PedidosPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
       </div>
     )
   }
@@ -306,13 +306,13 @@ export default function PedidosPage() {
               >
                 <Menu className="h-6 w-6" />
               </button>
-              <h1 className="text-2xl font-bold text-gray-900 ml-2">Koxixo</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900 ml-2">Koxixo</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-gray-600" />
-                <span className="text-sm text-gray-700">{session?.user.name}</span>
-                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+            <div className="flex items-center space-x-2 md:space-x-4">
+              <div className="flex items-center space-x-1 md:space-x-2">
+                <User className="h-4 w-4 md:h-5 md:w-5 text-gray-600" />
+                <span className="text-xs md:text-sm text-gray-700 hidden sm:inline">{session?.user.name}</span>
+                <span className="text-xs bg-red-100 text-red-800 px-1 md:px-2 py-1 rounded-full">
                   {session?.user.role}
                 </span>
               </div>
@@ -320,7 +320,7 @@ export default function PedidosPage() {
                 onClick={() => signOut()}
                 className="p-2 text-gray-600 hover:text-red-600 transition-colors"
               >
-                <LogOut className="h-5 w-5" />
+                <LogOut className="h-4 w-4 md:h-5 md:w-5" />
               </button>
             </div>
           </div>
@@ -340,7 +340,7 @@ export default function PedidosPage() {
             </Link>
             <Link
               href="/pedidos"
-              className="flex items-center px-4 py-2 text-gray-900 bg-blue-50 rounded-lg"
+              className="flex items-center px-4 py-2 text-gray-900 bg-red-50 rounded-lg"
             >
               <Package className="h-5 w-5 mr-3" />
               Pedidos
@@ -358,13 +358,13 @@ export default function PedidosPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900">Gerenciamento de Pedidos</h2>
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-8 space-y-4 md:space-y-0">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Gerenciamento de Pedidos</h2>
               {canCreateOrder && (
                 <Link href="/pedidos/novo">
-                  <button className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition-colors">
+                  <button className="flex items-center bg-red-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors w-full md:w-auto justify-center">
                     <PlusCircle className="h-5 w-5 mr-2" />
                     Novo Pedido
                   </button>
@@ -372,25 +372,50 @@ export default function PedidosPage() {
               )}
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="flex justify-between items-center mb-4">
-                <div className="relative w-full max-w-md">
+            <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 space-y-4 md:space-y-0">
+                <div className="relative w-full md:max-w-md">
                   <input
                     type="text"
                     placeholder="Buscar por título..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 </div>
-                <button className="flex items-center text-gray-600 border px-4 py-2 rounded-lg hover:bg-gray-50">
+                <button className="flex items-center text-gray-600 border px-4 py-2 rounded-lg hover:bg-gray-50 w-full md:w-auto justify-center">
                   <Filter className="h-5 w-5 mr-2" />
                   Filtros
                 </button>
               </div>
 
-              <div className="overflow-x-auto">
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-4">
+                {filteredOrders.map(order => (
+                  <div key={order.id} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-medium text-gray-900 text-sm">{order.title}</h3>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(order.status)}`}>
+                        {getStatusText(order.status)}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-600 mb-2">
+                      <div>Por: {order.createdBy.name}</div>
+                      <div>Data: {new Date(order.createdAt).toLocaleDateString()}</div>
+                      <div className={`${getPriorityClass(order.priority)}`}>
+                        Prioridade: {getPriorityText(order.priority)}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {getActionButtons(order)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -445,10 +470,10 @@ export default function PedidosPage() {
 
       {/* Modal de Detalhes */}
       {viewingOrder && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-w-[90vw] max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">Detalhes do Pedido #{viewingOrder.id}</h3>
+              <h3 className="text-lg md:text-xl font-semibold text-gray-900">Detalhes do Pedido #{viewingOrder.id}</h3>
               <button
                 onClick={() => setViewingOrder(null)}
                 className="text-gray-400 hover:text-gray-600"
@@ -546,7 +571,7 @@ export default function PedidosPage() {
                     setViewingOrder(null)
                     handleEditOrder(viewingOrder)
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                 >
                   Editar Pedido
                 </button>
@@ -558,8 +583,8 @@ export default function PedidosPage() {
 
       {/* Modal de Edição */}
       {editingOrder && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw]">
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Editar Pedido #{editingOrder.id}</h3>
             
             <div className="space-y-4">
@@ -571,7 +596,7 @@ export default function PedidosPage() {
                   type="text"
                   value={editForm.title}
                   onChange={(e) => setEditForm({...editForm, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
 
@@ -583,7 +608,7 @@ export default function PedidosPage() {
                   rows={3}
                   value={editForm.description}
                   onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 resize-vertical"
                   placeholder="Descreva os detalhes do pedido..."
                 />
               </div>
@@ -595,7 +620,7 @@ export default function PedidosPage() {
                 <select
                   value={editForm.priority}
                   onChange={(e) => setEditForm({...editForm, priority: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   <option value="LOW">Baixa</option>
                   <option value="MEDIUM">Média</option>
@@ -612,7 +637,7 @@ export default function PedidosPage() {
                   step="0.01"
                   value={editForm.value}
                   onChange={(e) => setEditForm({...editForm, value: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
               </div>
             </div>
@@ -626,7 +651,7 @@ export default function PedidosPage() {
               </button>
               <button
                 onClick={handleSaveEdit}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
                 Salvar
               </button>
