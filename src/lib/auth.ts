@@ -17,25 +17,46 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
+          console.log('🔍 Tentativa de login para:', credentials.email)
+          
           const user = await prisma.user.findUnique({
             where: {
               email: credentials.email
             }
           })
 
+          console.log('👤 User found:', user ? {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            hasPassword: !!user.password,
+            passwordLength: user.password?.length
+          } : 'User not found')
+
           if (!user) {
+            console.log('❌ User not found for email:', credentials.email)
             return null
           }
+
+          console.log('🔐 Comparing passwords...')
+          console.log('Input password:', credentials.password)
+          console.log('Stored hash length:', user.password.length)
+          console.log('Hash starts with:', user.password.substring(0, 20) + '...')
 
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
           )
 
+          console.log('✅ Password valid?', isPasswordValid)
+
           if (!isPasswordValid) {
+            console.log('❌ Invalid password for user:', credentials.email)
             return null
           }
 
+          console.log('🎉 Login successful for:', credentials.email)
           return {
             id: user.id.toString(),
             email: user.email,
@@ -43,7 +64,7 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
           }
         } catch (error) {
-          console.error('Erro durante autenticação:', error)
+          console.error('💥 Erro durante autenticação:', error)
           return null
         }
       }
