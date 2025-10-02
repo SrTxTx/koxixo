@@ -10,15 +10,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   name      String
   password  String
   role      String   // ADMIN, VENDEDOR, ORCAMENTO, PRODUCAO
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relacionamentos - pedidos criados
   createdOrders Order[] @relation("CreatedBy")
@@ -39,8 +38,8 @@ model Order {
   value       Float?
   status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, IN_PROGRESS, COMPLETED, DELIVERED, CANCELLED
   priority    String   @default("MEDIUM")  // HIGH, MEDIUM, LOW
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
   dueDate     DateTime?
 
   // Quem criou
