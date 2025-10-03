@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { executeWithRetry } from '@/lib/db-config'
 import bcrypt from 'bcryptjs'
 
 export async function PUT(
@@ -28,8 +29,10 @@ export async function PUT(
     }
 
     // Verificar se usuário existe
-    const existingUser = await prisma.user.findUnique({
-      where: { id: userId }
+    const existingUser = await executeWithRetry(async () => {
+      return await prisma.user.findUnique({
+        where: { id: userId }
+      })
     })
 
     if (!existingUser) {
@@ -37,11 +40,13 @@ export async function PUT(
     }
 
     // Verificar se email já está em uso por outro usuário
-    const emailInUse = await prisma.user.findFirst({
-      where: { 
-        email,
-        id: { not: userId }
-      }
+    const emailInUse = await executeWithRetry(async () => {
+      return await prisma.user.findFirst({
+        where: { 
+          email,
+          id: { not: userId }
+        }
+      })
     })
 
     if (emailInUse) {

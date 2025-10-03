@@ -27,7 +27,7 @@ export const authOptions: NextAuthOptions = {
                 email: credentials.email
               }
             })
-          })
+          }, 5, 150) // Aumentar tentativas e delay
 
           console.log('👤 User found:', user ? {
             id: user.id,

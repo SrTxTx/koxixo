@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { executeWithRetry } from '@/lib/db-config'
 import bcrypt from 'bcryptjs'
 
 export async function GET() {
@@ -12,15 +13,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
     }
 
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true
-      },
-      orderBy: { name: 'asc' }
+    const users = await executeWithRetry(async () => {
+      return await prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true
+        },
+        orderBy: { name: 'asc' }
+      })
     })
 
     return NextResponse.json(users)
@@ -50,8 +53,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se email já existe
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
+    const existingUser = await executeWithRetry(async () => {
+      return await prisma.user.findUnique({
+        where: { email }
+      })
     })
 
     if (existingUser) {
@@ -62,20 +67,22 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 12)
 
     // Criar usuário
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        role,
-        password: hashedPassword
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true
-      }
+    const user = await executeWithRetry(async () => {
+      return await prisma.user.create({
+        data: {
+          name,
+          email,
+          role,
+          password: hashedPassword
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true
+        }
+      })
     })
 
     return NextResponse.json(user, { status: 201 })

@@ -19,14 +19,16 @@ export const dbConfig = {
 
 // Função helper para tratar erros específicos do PostgreSQL
 export const handlePrismaError = (error: any) => {
-  // Erro específico de prepared statement
-  if (error.code === '42P05') {
+  // Erro específico de prepared statement - mais robusto
+  if (error.code === '42P05' || 
+      error.message?.includes('prepared statement') ||
+      error.message?.includes('already exists')) {
     console.log('🔄 Prepared statement error detected, retrying...')
-    return { retry: true, delay: 100 }
+    return { retry: true, delay: 150 }
   }
   
   // Outros erros de conexão
-  if (error.code?.startsWith('P')) {
+  if (error.code?.startsWith('P') || error.code?.startsWith('42')) {
     console.log('🚨 Prisma connection error:', error.code, error.message)
     return { retry: true, delay: 200 }
   }
