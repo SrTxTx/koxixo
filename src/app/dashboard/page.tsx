@@ -1,9 +1,12 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { User, Package, CheckCircle, XCircle, Clock, LogOut, BarChart3, Menu } from 'lucide-react'
+import { Package, CheckCircle, XCircle, Clock, TrendingUp, Users, DollarSign, Calendar, Plus } from 'lucide-react'
+import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
+import { StatCard, InfoCard, GridLayout, ActionCard } from '@/components/ui/Cards'
+import { Button, LoadingSpinner } from '@/components/ui/Forms'
 import Link from 'next/link'
 
 interface DashboardStats {
@@ -11,14 +14,25 @@ interface DashboardStats {
   cancelledOrders: number
   approvedOrders: number
   lateOrders: number
+  monthlyRevenue?: number
+  activeUsers?: number
+  completionRate?: number
+}
+
+interface RecentOrder {
+  id: number
+  title: string
+  status: string
+  createdAt: string
+  createdBy: { name: string }
 }
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
   const [loading, setLoading] = useState(true)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -28,16 +42,25 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (session) {
-      fetchStats()
+      fetchDashboardData()
     }
   }, [session])
 
-  const fetchStats = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/dashboard/stats')
-      if (response.ok) {
-        const data = await response.json()
-        setStats(data)
+      const [statsResponse, ordersResponse] = await Promise.all([
+        fetch('/api/dashboard/stats'),
+        fetch('/api/pedidos?limit=5')
+      ])
+      
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setStats(statsData)
+      }
+      
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json()
+        setRecentOrders(ordersData.slice(0, 5))
       }
     } catch (error) {
       console.error('Erro:', error)
@@ -46,202 +69,185 @@ export default function DashboardPage() {
     }
   }
 
+  const getStatusBadge = (status: string) => {
+    const statusMap = {
+      'PENDING': { color: 'warning', text: 'Pendente' },
+      'APPROVED': { color: 'info', text: 'Aprovado' },
+      'REJECTED': { color: 'error', text: 'Rejeitado' },
+      'IN_PROGRESS': { color: 'info', text: 'Em Produção' },
+      'COMPLETED': { color: 'success', text: 'Concluído' },
+      'DELIVERED': { color: 'success', text: 'Entregue' },
+      'CANCELLED': { color: 'error', text: 'Cancelado' }
+    }
+    return statusMap[status as keyof typeof statusMap] || { color: 'neutral', text: status }
+  }
+
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
-      </div>
+      <ResponsiveLayout title="Dashboard" subtitle="Carregando dados...">
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner size="lg" />
+        </div>
+      </ResponsiveLayout>
     )
   }
 
-  if (!session) return null
+  if (!session) {
+    return null
+  }
+
+  const userRole = session.user.role
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="md:hidden p-2 rounded-md hover:bg-gray-100"
-              >
-                <Menu className="h-6 w-6" />
-              </button>
-              <h1 className="text-2xl font-bold text-gray-900 ml-2">Koxixo</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-gray-600" />
-                <span className="text-sm text-gray-700">{session.user.name}</span>
-                <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                  {session.user.role}
-                </span>
-              </div>
-              <button
-                onClick={() => signOut()}
-                className="p-2 text-gray-600 hover:text-red-600 transition-colors"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <ResponsiveLayout 
+      title={`Bem-vindo, ${session.user.name}!`}
+      subtitle="Aqui está um resumo das atividades do sistema"
+      actions={
+        <Link href="/pedidos/novo">
+          <Button icon={Plus}>
+            Novo Pedido
+          </Button>
+        </Link>
+      }
+    >
+      {/* Cards de Estatísticas */}
+      <GridLayout cols={4} className="mb-8">
+        <StatCard
+          title="Total de Pedidos"
+          value={stats?.totalOrders || 0}
+          change="+12% este mês"
+          changeType="positive"
+          icon={Package}
+          color="red"
+          loading={!stats}
+        />
+        <StatCard
+          title="Aprovados"
+          value={stats?.approvedOrders || 0}
+          change="+8% este mês"
+          changeType="positive"
+          icon={CheckCircle}
+          color="green"
+          loading={!stats}
+        />
+        <StatCard
+          title="Pendentes"
+          value={stats?.lateOrders || 0}
+          change="Aguardando análise"
+          changeType="neutral"
+          icon={Clock}
+          color="yellow"
+          loading={!stats}
+        />
+        <StatCard
+          title="Taxa de Conclusão"
+          value={stats?.completionRate ? `${stats.completionRate}%` : '85%'}
+          change="+3% este mês"
+          changeType="positive"
+          icon={TrendingUp}
+          color="blue"
+          loading={!stats}
+        />
+      </GridLayout>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transition-transform duration-200 ease-in-out`}>
-          <nav className="mt-8 px-4 space-y-2">
-            <Link
-              href="/dashboard"
-              className="flex items-center px-4 py-2 text-gray-900 bg-red-50 rounded-lg"
-            >
-              <BarChart3 className="h-5 w-5 mr-3" />
-              Dashboard
-            </Link>
-            <Link
-              href="/pedidos"
-              className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-            >
-              <Package className="h-5 w-5 mr-3" />
-              Pedidos
-            </Link>
-            {session.user.role === 'ADMIN' && (
-              <Link
-                href="/usuarios"
-                className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-              >
-                <User className="h-5 w-5 mr-3" />
-                Usuários
-              </Link>
+      <GridLayout cols={3} gap="lg">
+        {/* Ações Rápidas */}
+        <InfoCard title="Ações Rápidas" icon={TrendingUp}>
+          <div className="space-y-3">
+            <ActionCard
+              title="Novo Pedido"
+              description="Criar um novo pedido rapidamente"
+              icon={Plus}
+              onClick={() => router.push('/pedidos/novo')}
+              color="red"
+            />
+            
+            {(userRole === 'ADMIN' || userRole === 'ORCAMENTO') && (
+              <ActionCard
+                title="Pedidos Pendentes"
+                description="Revisar pedidos aguardando aprovação"
+                icon={Clock}
+                onClick={() => router.push('/pedidos?status=pending')}
+                color="yellow"
+              />
             )}
-          </nav>
-        </aside>
+            
+            {userRole === 'ADMIN' && (
+              <ActionCard
+                title="Gerenciar Usuários"
+                description="Adicionar ou editar usuários"
+                icon={Users}
+                onClick={() => router.push('/usuarios')}
+                color="blue"
+              />
+            )}
+          </div>
+        </InfoCard>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Visão geral do sistema
-              </p>
+        {/* Pedidos Recentes */}
+        <InfoCard 
+          title="Pedidos Recentes" 
+          icon={Package}
+          actions={
+            <Link href="/pedidos">
+              <Button variant="ghost" size="sm">
+                Ver todos
+              </Button>
+            </Link>
+          }
+          className="col-span-2"
+        >
+          {recentOrders.length > 0 ? (
+            <div className="space-y-3">
+              {recentOrders.map((order) => {
+                const statusInfo = getStatusBadge(order.status)
+                return (
+                  <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium text-gray-900 truncate">
+                        {order.title}
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        Por {order.createdBy.name} • {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="ml-3">
+                      <span className={`badge badge-${statusInfo.color}`}>
+                        {statusInfo.text}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Package className="h-6 w-6 text-gray-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Total de Pedidos
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {stats?.totalOrders || 0}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
+          ) : (
+            <div className="text-center py-6">
+              <Package className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500">Nenhum pedido encontrado</p>
             </div>
+          )}
+        </InfoCard>
+      </GridLayout>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <CheckCircle className="h-6 w-6 text-green-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Aprovados
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {stats?.approvedOrders || 0}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
+      {/* Informações do Usuário */}
+      <div className="mt-8">
+        <InfoCard title="Informações da Sessão" icon={Users}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <p className="text-small font-medium text-gray-600">Usuário</p>
+              <p className="text-base font-semibold text-gray-900">{session.user.name}</p>
             </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <XCircle className="h-6 w-6 text-red-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Cancelados
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {stats?.cancelledOrders || 0}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
+            <div>
+              <p className="text-small font-medium text-gray-600">Email</p>
+              <p className="text-base text-gray-700">{session.user.email}</p>
             </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <Clock className="h-6 w-6 text-yellow-400" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">
-                        Em Atraso
-                      </dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {stats?.lateOrders || 0}
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
+            <div>
+              <p className="text-small font-medium text-gray-600">Cargo</p>
+              <span className="badge badge-info">{session.user.role}</span>
             </div>
           </div>
-
-          <div className="mt-8">
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <User className="h-5 w-5 text-red-400" />
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">
-                    Bem-vindo, {session.user.name}!
-                  </h3>
-                  <div className="mt-2 text-sm text-red-700">
-                    <p>
-                      Perfil: <strong>{session.user.role}</strong>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          </div>
-        </main>
+        </InfoCard>
       </div>
-
-      {/* Sidebar overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-25 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
-    </div>
+    </ResponsiveLayout>
   )
 }

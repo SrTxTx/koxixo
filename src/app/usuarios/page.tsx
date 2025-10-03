@@ -1,10 +1,12 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { PlusCircle, User, LogOut, Menu, BarChart3, Package, Edit, Trash2, Eye, EyeOff } from 'lucide-react'
-import Link from 'next/link'
+import { PlusCircle, User, Edit, Trash2, Eye, EyeOff, Search, UserPlus } from 'lucide-react'
+import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
+import { InfoCard, ActionCard } from '@/components/ui/Cards'
+import { Button, Input, Select, Alert, LoadingSpinner } from '@/components/ui/Forms'
 
 interface User {
   id: number
@@ -20,7 +22,6 @@ export default function UsuariosPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [creatingUser, setCreatingUser] = useState(false)
   const [userForm, setUserForm] = useState({
@@ -30,6 +31,7 @@ export default function UsuariosPage() {
     password: ''
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -54,101 +56,98 @@ export default function UsuariosPage() {
         setUsers(data)
       }
     } catch (error) {
-      console.error('Erro ao buscar usuários:', error)
+      console.error('Erro:', error)
+      setMessage({ type: 'error', text: 'Erro ao carregar usuários' })
     } finally {
       setLoading(false)
     }
   }
 
-  const handleCreateUser = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLoading(true)
+
     try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
+      const url = editingUser ? `/api/users/${editingUser.id}` : '/api/users'
+      const method = editingUser ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userForm)
       })
 
       if (response.ok) {
-        setCreatingUser(false)
-        setUserForm({ name: '', email: '', role: 'VENDEDOR', password: '' })
-        fetchUsers()
-      }
-    } catch (error) {
-      console.error('Erro ao criar usuário:', error)
-    }
-  }
-
-  const handleUpdateUser = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editingUser) return
-
-    try {
-      const response = await fetch(`/api/users/${editingUser.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: userForm.name,
-          email: userForm.email,
-          role: userForm.role,
-          ...(userForm.password && { password: userForm.password })
+        setMessage({ 
+          type: 'success', 
+          text: editingUser ? 'Usuário atualizado!' : 'Usuário criado!' 
         })
-      })
-
-      if (response.ok) {
-        setEditingUser(null)
-        setUserForm({ name: '', email: '', role: 'VENDEDOR', password: '' })
+        resetForm()
         fetchUsers()
+      } else {
+        const error = await response.json()
+        setMessage({ type: 'error', text: error.message || 'Erro ao salvar usuário' })
       }
     } catch (error) {
-      console.error('Erro ao atualizar usuário:', error)
+      setMessage({ type: 'error', text: 'Erro ao salvar usuário' })
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleDeleteUser = async (userId: number) => {
+  const handleDelete = async (userId: number) => {
     if (!confirm('Tem certeza que deseja excluir este usuário?')) return
 
     try {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE'
-      })
-
+      const response = await fetch(`/api/users/${userId}`, { method: 'DELETE' })
       if (response.ok) {
+        setMessage({ type: 'success', text: 'Usuário excluído!' })
         fetchUsers()
+      } else {
+        const error = await response.json()
+        setMessage({ type: 'error', text: error.message || 'Erro ao excluir usuário' })
       }
     } catch (error) {
-      console.error('Erro ao excluir usuário:', error)
+      setMessage({ type: 'error', text: 'Erro ao excluir usuário' })
     }
   }
 
-  const openEditModal = (user: User) => {
-    setEditingUser(user)
+  const resetForm = () => {
+    setUserForm({ name: '', email: '', role: 'VENDEDOR', password: '' })
+    setEditingUser(null)
+    setCreatingUser(false)
+    setShowPassword(false)
+  }
+
+  const startEdit = (user: User) => {
     setUserForm({
       name: user.name,
       email: user.email,
       role: user.role,
       password: ''
     })
-  }
-
-  const getRoleName = (role: string) => {
-    const roles = {
-      'ADMIN': 'Administrador',
-      'VENDEDOR': 'Vendedor',
-      'ORCAMENTO': 'Orçamento',
-      'PRODUCAO': 'Produção'
-    }
-    return roles[role as keyof typeof roles] || role
+    setEditingUser(user)
+    setCreatingUser(true)
   }
 
   const getRoleColor = (role: string) => {
-    const colors = {
-      'ADMIN': 'bg-red-100 text-red-800',
-      'VENDEDOR': 'bg-red-100 text-red-800',
-      'ORCAMENTO': 'bg-yellow-100 text-yellow-800',
-      'PRODUCAO': 'bg-green-100 text-green-800'
+    switch (role) {
+      case 'ADMIN': return 'red'
+      case 'VENDEDOR': return 'blue'
+      case 'ORCAMENTO': return 'green'
+      case 'PRODUCAO': return 'yellow'
+      default: return 'gray'
     }
-    return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+  }
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'ADMIN': return 'Administrador'
+      case 'VENDEDOR': return 'Vendedor'
+      case 'ORCAMENTO': return 'Orçamento'
+      case 'PRODUCAO': return 'Produção'
+      default: return role
+    }
   }
 
   const filteredUsers = users.filter(user =>
@@ -156,312 +155,195 @@ export default function UsuariosPage() {
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  if (status === 'loading') return <div>Carregando...</div>
-  if (session?.user.role !== 'ADMIN') return <div>Acesso negado</div>
+  if (status === 'loading' || loading) {
+    return (
+      <ResponsiveLayout title="Usuários" subtitle="Carregando...">
+        <div className="flex items-center justify-center py-12">
+          <LoadingSpinner size="lg" />
+        </div>
+      </ResponsiveLayout>
+    )
+  }
+
+  if (!session || session.user.role !== 'ADMIN') {
+    return null
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
-        <div className="flex items-center justify-center h-16 bg-red-600">
-          <h1 className="text-white text-xl font-bold">
-            K<span className="text-red-200">o</span>xix<span className="text-red-200">o</span>
-          </h1>
+    <ResponsiveLayout 
+      title="Gerenciamento de Usuários"
+      subtitle="Gerencie usuários do sistema"
+      actions={
+        <Button 
+          icon={UserPlus} 
+          onClick={() => {
+            resetForm()
+            setCreatingUser(true)
+          }}
+        >
+          Novo Usuário
+        </Button>
+      }
+    >
+      {/* Mensagens */}
+      {message && (
+        <div className="mb-6">
+          <Alert variant={message.type} onClose={() => setMessage(null)}>
+            {message.text}
+          </Alert>
         </div>
-        <nav className="mt-5 px-2">
-          <Link href="/dashboard" className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-            <BarChart3 className="mr-4 h-6 w-6" />
-            Dashboard
-          </Link>
-          <Link href="/pedidos" className="group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-            <Package className="mr-4 h-6 w-6" />
-            Pedidos
-          </Link>
-          <Link href="/usuarios" className="group flex items-center px-2 py-2 text-base font-medium rounded-md bg-gray-100 text-gray-900">
-            <User className="mr-4 h-6 w-6" />
-            Usuários
-          </Link>
-        </nav>
-        <div className="absolute bottom-0 w-full p-4">
-          <button
-            onClick={() => signOut()}
-            className="w-full group flex items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-          >
-            <LogOut className="mr-4 h-6 w-6" />
-            Sair
-          </button>
-        </div>
-      </div>
-
-      {/* Overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
       )}
 
-      {/* Main content */}
-      <div className="flex-1 lg:ml-0">
-        {/* Header */}
-        <div className="bg-white shadow-sm">
-          <div className="mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center">
-                <button
-                  type="button"
-                  className="lg:hidden -ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900"
-                  onClick={() => setSidebarOpen(true)}
-                >
-                  <Menu className="h-6 w-6" />
-                </button>
-                <h1 className="ml-4 lg:ml-0 text-2xl font-semibold text-gray-900">Gerenciar Usuários</h1>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-700">
-                  Olá, {session?.user?.name}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Busca */}
+      <div className="mb-6">
+        <Input
+          icon={Search}
+          placeholder="Buscar por nome ou email..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
 
-        {/* Content */}
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Actions */}
-          <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center space-x-4">
-              <input
-                type="text"
-                placeholder="Buscar usuários..."
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <button
-              onClick={() => setCreatingUser(true)}
-              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-            >
-              <PlusCircle className="h-5 w-5 mr-2" />
-              Novo Usuário
-            </button>
-          </div>
-
-          {/* Users Table */}
-          <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            <ul className="divide-y divide-gray-200">
-              {loading ? (
-                <li className="px-6 py-4 text-center">Carregando usuários...</li>
-              ) : filteredUsers.length === 0 ? (
-                <li className="px-6 py-4 text-center text-gray-500">Nenhum usuário encontrado</li>
-              ) : (
-                filteredUsers.map((user) => (
-                  <li key={user.id} className="px-6 py-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Lista de Usuários */}
+        <div className="lg:col-span-2">
+          <InfoCard title="Usuários do Sistema" icon={User}>
+            {filteredUsers.length > 0 ? (
+              <div className="space-y-4">
+                {filteredUsers.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-3">
                         <div className="flex-shrink-0">
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <User className="h-6 w-6 text-gray-600" />
+                          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                            <User className="h-5 w-5 text-gray-600" />
                           </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-gray-900 truncate">
+                            {user.name}
+                          </h4>
+                          <p className="text-sm text-gray-500 truncate">
+                            {user.email}
+                          </p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className={`badge badge-${getRoleColor(user.role)}`}>
+                              {getRoleLabel(user.role)}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              • {new Date(user.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
                         </div>
-                        <div className="ml-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                            {getRoleName(user.role)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => openEditModal(user)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Edit className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
                       </div>
                     </div>
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
+                    <div className="flex items-center space-x-2 ml-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        icon={Edit}
+                        onClick={() => startEdit(user)}
+                      >
+                        Editar
+                      </Button>
+                      {user.id !== parseInt(session.user.id) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={Trash2}
+                          onClick={() => handleDelete(user.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Excluir
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <User className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500">
+                  {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+                </p>
+              </div>
+            )}
+          </InfoCard>
+        </div>
+
+        {/* Formulário de Usuário */}
+        <div>
+          <InfoCard 
+            title={editingUser ? 'Editar Usuário' : 'Novo Usuário'} 
+            icon={editingUser ? Edit : UserPlus}
+          >
+            {creatingUser ? (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Input
+                  label="Nome"
+                  value={userForm.name}
+                  onChange={(e) => setUserForm({...userForm, name: e.target.value})}
+                  required
+                />
+                
+                <Input
+                  label="Email"
+                  type="email"
+                  value={userForm.email}
+                  onChange={(e) => setUserForm({...userForm, email: e.target.value})}
+                  required
+                />
+                
+                <Select
+                  label="Cargo"
+                  value={userForm.role}
+                  onChange={(e) => setUserForm({...userForm, role: e.target.value})}
+                  required
+                >
+                  <option value="VENDEDOR">Vendedor</option>
+                  <option value="ORCAMENTO">Orçamento</option>
+                  <option value="PRODUCAO">Produção</option>
+                  <option value="ADMIN">Administrador</option>
+                </Select>
+                
+                <div className="relative">
+                  <Input
+                    label={editingUser ? "Nova Senha (deixe vazio para manter)" : "Senha"}
+                    type={showPassword ? "text" : "password"}
+                    value={userForm.password}
+                    onChange={(e) => setUserForm({...userForm, password: e.target.value})}
+                    required={!editingUser}
+                    icon={showPassword ? EyeOff : Eye}
+                    onIconClick={() => setShowPassword(!showPassword)}
+                  />
+                </div>
+                
+                <div className="flex space-x-3">
+                  <Button type="submit" loading={loading} className="flex-1">
+                    {editingUser ? 'Atualizar' : 'Criar'}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    onClick={resetForm}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="text-center py-6">
+                <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500 mb-4">
+                  Clique em "Novo Usuário" para adicionar um usuário ao sistema
+                </p>
+              </div>
+            )}
+          </InfoCard>
         </div>
       </div>
-
-      {/* Create User Modal */}
-      {creatingUser && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Criar Novo Usuário</h3>
-              <form onSubmit={handleCreateUser} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    value={userForm.name}
-                    onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    value={userForm.email}
-                    onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cargo</label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    value={userForm.role}
-                    onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                  >
-                    <option value="VENDEDOR">Vendedor</option>
-                    <option value="ORCAMENTO">Orçamento</option>
-                    <option value="PRODUCAO">Produção</option>
-                    <option value="ADMIN">Administrador</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                      value={userForm.password}
-                      onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
-                    </button>
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCreatingUser(false)
-                      setUserForm({ name: '', email: '', role: 'VENDEDOR', password: '' })
-                    }}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                  >
-                    Criar Usuário
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit User Modal */}
-      {editingUser && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Editar Usuário</h3>
-              <form onSubmit={handleUpdateUser} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    value={userForm.name}
-                    onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    value={userForm.email}
-                    onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cargo</label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                    value={userForm.role}
-                    onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
-                  >
-                    <option value="VENDEDOR">Vendedor</option>
-                    <option value="ORCAMENTO">Orçamento</option>
-                    <option value="PRODUCAO">Produção</option>
-                    <option value="ADMIN">Administrador</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nova Senha (deixe em branco para manter a atual)</label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                      value={userForm.password}
-                      onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
-                    />
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
-                    </button>
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingUser(null)
-                      setUserForm({ name: '', email: '', role: 'VENDEDOR', password: '' })
-                    }}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                  >
-                    Salvar Alterações
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </ResponsiveLayout>
   )
 }
