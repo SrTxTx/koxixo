@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
+import { executeWithRetry } from './db-config'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -19,10 +20,13 @@ export const authOptions: NextAuthOptions = {
         try {
           console.log('🔍 Tentativa de login para:', credentials.email)
           
-          const user = await prisma.user.findUnique({
-            where: {
-              email: credentials.email
-            }
+          // Usar retry helper para problemas de prepared statements
+          const user = await executeWithRetry(async () => {
+            return await prisma.user.findUnique({
+              where: {
+                email: credentials.email
+              }
+            })
           })
 
           console.log('👤 User found:', user ? {
