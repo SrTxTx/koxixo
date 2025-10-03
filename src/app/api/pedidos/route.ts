@@ -7,19 +7,29 @@ export const dynamic = 'force-dynamic'
 
 // GET: Listar todos os pedidos
 export async function GET() {
+  console.log('🔍 API /pedidos - Iniciando verificação de sessão...')
+  
   const session = await getServerSession(authOptions)
+  console.log('📋 Sessão recebida:', session ? {
+    id: session.user.id,
+    name: session.user.name,
+    role: session.user.role
+  } : 'Nenhuma sessão')
+  
   if (!session) {
+    console.log('❌ Acesso negado - nenhuma sessão encontrada')
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
   }
 
   try {
     const orders = await prisma.order.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { 
-        createdBy: { select: { name: true } },
-        rejectedBy: { select: { name: true } }
+      include: {
+        createdBy: true,
+        rejectedBy: true
       },
     })
+    
     return NextResponse.json(orders)
   } catch (error) {
     console.error('Erro ao buscar pedidos:', error)

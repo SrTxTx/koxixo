@@ -53,10 +53,23 @@ export default function PedidosPage() {
   const fetchOrders = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/pedidos')
+      const response = await fetch('/api/pedidos', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include' // Importante para incluir cookies de sessão
+      })
       if (response.ok) {
         const data = await response.json()
         setOrders(data)
+      } else {
+        console.error('Erro na resposta da API:', response.status, response.statusText)
+        if (response.status === 401) {
+          // Se não autorizado, redirecionar para login
+          router.push('/login')
+        }
       }
     } catch (error) {
       console.error('Erro ao buscar pedidos:', error)
@@ -69,7 +82,10 @@ export default function PedidosPage() {
     try {
       const response = await fetch(`/api/pedidos/${orderId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include', // Incluir cookies de sessão
         body: JSON.stringify({ action, rejectionReason }),
       })
 
@@ -77,7 +93,11 @@ export default function PedidosPage() {
         await fetchOrders() // Recarrega a lista
       } else {
         const data = await response.json()
-        alert(data.error || 'Erro ao processar ação')
+        if (response.status === 401) {
+          router.push('/login')
+        } else {
+          alert(data.error || 'Erro ao processar ação')
+        }
       }
     } catch (error) {
       console.error('Erro ao processar ação:', error)
@@ -101,7 +121,10 @@ export default function PedidosPage() {
     try {
       const response = await fetch(`/api/pedidos/${editingOrder.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include', // Incluir cookies de sessão
         body: JSON.stringify({
           title: editForm.title,
           description: editForm.description,
@@ -116,7 +139,11 @@ export default function PedidosPage() {
         setEditForm({ title: '', description: '', priority: 'MEDIUM', value: '' })
       } else {
         const data = await response.json()
-        alert(data.error || 'Erro ao editar pedido')
+        if (response.status === 401) {
+          router.push('/login')
+        } else {
+          alert(data.error || 'Erro ao editar pedido')
+        }
       }
     } catch (error) {
       console.error('Erro ao editar pedido:', error)
