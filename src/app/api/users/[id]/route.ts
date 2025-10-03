@@ -107,15 +107,20 @@ export async function DELETE(
       return NextResponse.json({ error: 'Não é possível excluir seu próprio usuário' }, { status: 400 })
     }
 
-    // Verificar se usuário tem pedidos
-    const userOrders = await prisma.order.findFirst({
+    // Verificar se usuário tem pedidos criados
+    const userOrders = await prisma.order.findMany({
       where: { createdById: userId }
     })
 
-    if (userOrders) {
-      return NextResponse.json({ 
-        error: 'Não é possível excluir usuário que possui pedidos cadastrados' 
-      }, { status: 400 })
+    // Se o usuário tem pedidos, transferir a propriedade para o admin atual
+    if (userOrders.length > 0) {
+      console.log(`Transferindo ${userOrders.length} pedidos do usuário ${existingUser.name} para o admin ${session.user.name}`)
+      
+      // Atualizar pedidos criados pelo usuário
+      await prisma.order.updateMany({
+        where: { createdById: userId },
+        data: { createdById: parseInt(session.user.id) }
+      })
     }
 
     // Excluir usuário
@@ -123,7 +128,11 @@ export async function DELETE(
       where: { id: userId }
     })
 
-    return NextResponse.json({ message: 'Usuário excluído com sucesso' })
+    const message = userOrders.length > 0 
+      ? `Usuário excluído com sucesso. ${userOrders.length} pedidos foram transferidos para sua conta.`
+      : 'Usuário excluído com sucesso'
+
+    return NextResponse.json({ message })
   } catch (error) {
     console.error('Erro ao excluir usuário:', error)
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
