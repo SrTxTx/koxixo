@@ -28,7 +28,10 @@ model User {
   approvedOrders  Order[] @relation("ApprovedBy")
   rejectedOrders  Order[] @relation("RejectedBy")
   completedOrders Order[] @relation("CompletedBy")
-  deliveredOrders Order[] @relation("DeliveredBy")
+	  deliveredOrders Order[] @relation("DeliveredBy")
+
+  // Relacionamento - pedidos editados
+  lastEditedOrders Order[] @relation("LastEditedBy")
 
   @@map("users")
 }
@@ -68,6 +71,11 @@ model Order {
   deliveredAt   DateTime? @map("delivered_at")
   deliveredById Int? @map("delivered_by_id")
   deliveredBy   User? @relation("DeliveredBy", fields: [deliveredById], references: [id])
+
+  // Última edição
+  lastEditedById Int? @map("last_edited_by_id")
+  lastEditedBy   User? @relation("LastEditedBy", fields: [lastEditedById], references: [id])
+  lastEditedAt   DateTime? @map("last_edited_at")
 
   @@map("orders")
 }

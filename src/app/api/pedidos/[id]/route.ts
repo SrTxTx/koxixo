@@ -23,7 +23,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     // Verificar se o pedido existe
     const existingOrder = await prisma.order.findUnique({
-      where: { id: orderId }
+      where: { id: orderId },
+      include: {
+        createdBy: { select: { id: true, name: true } }
+      }
     })
 
     if (!existingOrder) {
@@ -44,6 +47,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       }, { status: 403 })
     }
 
+    // VENDEDOR só pode editar seus próprios pedidos
+    if (userRole === 'VENDEDOR' && existingOrder.createdById !== parseInt(session.user.id)) {
+      return NextResponse.json({ 
+        error: 'Vendedores só podem editar seus próprios pedidos' 
+      }, { status: 403 })
+    }
+
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: {
@@ -51,9 +61,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         description: description || null,
         priority,
         value: value ? parseFloat(value) : null,
+        lastEditedById: parseInt(session.user.id),
+        lastEditedAt: new Date(),
       },
       include: {
-        createdBy: { select: { name: true } }
+        createdBy: { select: { name: true } },
+        lastEditedBy: { select: { name: true } }
       }
     })
 
