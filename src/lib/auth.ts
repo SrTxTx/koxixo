@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
-import { prisma } from './prisma'
+import { createAuthPrismaClient } from './prisma'
 import { executeWithRetry } from './db-config'
 
 export const authOptions: NextAuthOptions = {
@@ -20,14 +20,18 @@ export const authOptions: NextAuthOptions = {
         try {
           console.log('🔍 Tentativa de login para:', credentials.email)
           
-          // Usar retry helper para problemas de prepared statements
-          const user = await executeWithRetry(async () => {
-            return await prisma.user.findUnique({
-              where: {
-                email: credentials.email
-              }
-            })
-          }, 5, 150) // Aumentar tentativas e delay
+          // Criar uma instância específica para autenticação
+          const authPrisma = createAuthPrismaClient()
+          
+          try {
+            // Usar retry helper para problemas de prepared statements
+            const user = await executeWithRetry(async () => {
+              return await authPrisma.user.findUnique({
+                where: {
+                  email: credentials.email
+                }
+              })
+            }, 5, 150) // Aumentar tentativas e delay
 
           console.log('👤 User found:', user ? {
             id: user.id,
@@ -67,8 +71,16 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             role: user.role,
           }
+          
+          } catch (error) {
+            console.error('💥 Erro durante autenticação:', error)
+            return null
+          } finally {
+            // Desconectar o cliente específico de autenticação
+            await authPrisma.$disconnect()
+          }
         } catch (error) {
-          console.error('💥 Erro durante autenticação:', error)
+          console.error('💥 Erro geral durante autenticação:', error)
           return null
         }
       }

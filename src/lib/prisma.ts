@@ -45,6 +45,23 @@ export const createIsolatedPrismaClient = () => {
   })
 }
 
+// Função específica para autenticação - sempre cria nova instância
+export const createAuthPrismaClient = () => {
+  const databaseUrl = getDatabaseUrl()
+  
+  console.log('🔐 Criando cliente Prisma específico para autenticação')
+  console.log('🔧 URL configurada:', databaseUrl.replace(/:[^:]*@/, ':***@'))
+  
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url: databaseUrl,
+      },
+    },
+    log: ['error']
+  })
+}
+
 // Função para desconectar explicitamente (útil em serverless)
 export const disconnectPrisma = async () => {
   try {

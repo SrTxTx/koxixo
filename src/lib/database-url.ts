@@ -4,18 +4,15 @@ import { Prisma } from '@prisma/client'
 export const getDatabaseUrl = () => {
   const baseUrl = process.env.DATABASE_URL || ''
   
-  // Se já tem prepared_statements=false, retorna como está
-  if (baseUrl.includes('prepared_statements=false')) {
-    return baseUrl
-  }
+  // Remover qualquer prepared_statements existente
+  let cleanUrl = baseUrl.replace(/[&?]prepared_statements=(true|false)/g, '')
   
-  // Se tem outros parâmetros, adiciona o prepared_statements=false
-  if (baseUrl.includes('?')) {
-    return `${baseUrl}&prepared_statements=false`
+  // Garantir que sempre termine com prepared_statements=false
+  if (cleanUrl.includes('?')) {
+    return `${cleanUrl}&prepared_statements=false`
+  } else {
+    return `${cleanUrl}?prepared_statements=false`
   }
-  
-  // Se não tem parâmetros, adiciona como primeiro
-  return `${baseUrl}?prepared_statements=false`
 }
 
 // Configurações específicas para produção na Vercel
