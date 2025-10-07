@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { PlusCircle, Package, Filter, Search, User, LogOut, Menu, BarChart3, Eye } from 'lucide-react'
 import Link from 'next/link'
 
@@ -49,19 +49,7 @@ export default function PedidosPage() {
     value: ''
   })
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login')
-    }
-  }, [status, router])
-
-  useEffect(() => {
-    if (session) {
-      fetchOrders()
-    }
-  }, [session])
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch('/api/pedidos', {
@@ -87,7 +75,19 @@ export default function PedidosPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login')
+    }
+  }, [status, router])
+
+  useEffect(() => {
+    if (session) {
+      fetchOrders()
+    }
+  }, [session, fetchOrders])
 
   const handleOrderAction = async (orderId: number, action: string, rejectionReason?: string) => {
     try {
