@@ -31,6 +31,17 @@ export default function PedidosPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null)
+  
+  // Estados dos filtros avançados
+  const [showFilters, setShowFilters] = useState(false)
+  const [filters, setFilters] = useState({
+    status: '',
+    priority: '',
+    dateRange: '',
+    createdBy: '',
+    searchIn: 'title' // 'title', 'description', 'both'
+  })
+  
   const [editForm, setEditForm] = useState({
     title: '',
     description: '',
@@ -317,9 +328,79 @@ export default function PedidosPage() {
     }
   }
 
-  const filteredOrders = orders.filter(order =>
-    order.title.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Função de filtro avançada
+  const getFilteredOrders = () => {
+    return orders.filter(order => {
+      // Filtro de busca de texto
+      let matchesSearch = true
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase()
+        switch (filters.searchIn) {
+          case 'title':
+            matchesSearch = order.title.toLowerCase().includes(searchLower)
+            break
+          case 'description':
+            matchesSearch = order.description?.toLowerCase().includes(searchLower) || false
+            break
+          case 'both':
+            matchesSearch = order.title.toLowerCase().includes(searchLower) || 
+                           order.description?.toLowerCase().includes(searchLower) || false
+            break
+        }
+      }
+
+      // Filtro por status
+      const matchesStatus = !filters.status || order.status === filters.status
+
+      // Filtro por prioridade
+      const matchesPriority = !filters.priority || order.priority === filters.priority
+
+      // Filtro por data
+      let matchesDate = true
+      if (filters.dateRange) {
+        const orderDate = new Date(order.createdAt)
+        const now = new Date()
+        
+        switch (filters.dateRange) {
+          case 'today':
+            matchesDate = orderDate.toDateString() === now.toDateString()
+            break
+          case 'week':
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+            matchesDate = orderDate >= weekAgo
+            break
+          case 'month':
+            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+            matchesDate = orderDate >= monthAgo
+            break
+        }
+      }
+
+      // Filtro por criador
+      const matchesCreator = !filters.createdBy || 
+                           order.createdBy.name.toLowerCase().includes(filters.createdBy.toLowerCase())
+
+      return matchesSearch && matchesStatus && matchesPriority && matchesDate && matchesCreator
+    })
+  }
+
+  const filteredOrders = getFilteredOrders()
+
+  // Função para limpar filtros
+  const clearFilters = () => {
+    setFilters({
+      status: '',
+      priority: '',
+      dateRange: '',
+      createdBy: '',
+      searchIn: 'title'
+    })
+    setSearchTerm('')
+  }
+
+  // Contar filtros ativos
+  const activeFiltersCount = Object.values(filters).filter(value => value && value !== 'title').length + 
+                            (searchTerm ? 1 : 0)
 
   if (status === 'loading' || loading) {
     return (
@@ -415,18 +496,139 @@ export default function PedidosPage() {
                 <div className="relative w-full md:max-w-md">
                   <input
                     type="text"
-                    placeholder="Buscar por título..."
+                    placeholder={
+                      filters.searchIn === 'title' ? "Buscar por título..." :
+                      filters.searchIn === 'description' ? "Buscar por descrição..." :
+                      "Buscar por título ou descrição..."
+                    }
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                 </div>
-                <button className="flex items-center text-gray-600 border px-4 py-2 rounded-lg hover:bg-gray-50 w-full md:w-auto justify-center">
-                  <Filter className="h-5 w-5 mr-2" />
-                  Filtros
-                </button>
+                
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center border px-4 py-2 rounded-lg hover:bg-gray-50 w-full md:w-auto justify-center transition-colors ${
+                      showFilters ? 'bg-red-50 border-red-300 text-red-700' : 'text-gray-600'
+                    }`}
+                  >
+                    <Filter className="h-5 w-5 mr-2" />
+                    Filtros
+                    {activeFiltersCount > 0 && (
+                      <span className="ml-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                        {activeFiltersCount}
+                      </span>
+                    )}
+                  </button>
+                  
+                  {activeFiltersCount > 0 && (
+                    <button
+                      onClick={clearFilters}
+                      className="px-3 py-2 text-sm text-gray-500 hover:text-red-600 transition-colors"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {/* Painel de filtros */}
+              {showFilters && (
+                <div className="border-t pt-4 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    {/* Filtro por Status */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <select
+                        value={filters.status}
+                        onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                      >
+                        <option value="">Todos</option>
+                        <option value="PENDING">Pendente</option>
+                        <option value="APPROVED">Aprovado</option>
+                        <option value="REJECTED">Rejeitado</option>
+                        <option value="IN_PROGRESS">Em Produção</option>
+                        <option value="COMPLETED">Concluído</option>
+                        <option value="DELIVERED">Entregue</option>
+                      </select>
+                    </div>
+
+                    {/* Filtro por Prioridade */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Prioridade</label>
+                      <select
+                        value={filters.priority}
+                        onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                      >
+                        <option value="">Todas</option>
+                        <option value="HIGH">Alta</option>
+                        <option value="MEDIUM">Média</option>
+                        <option value="LOW">Baixa</option>
+                      </select>
+                    </div>
+
+                    {/* Filtro por Data */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Período</label>
+                      <select
+                        value={filters.dateRange}
+                        onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                      >
+                        <option value="">Todos</option>
+                        <option value="today">Hoje</option>
+                        <option value="week">Última semana</option>
+                        <option value="month">Último mês</option>
+                      </select>
+                    </div>
+
+                    {/* Filtro por Criador */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Criado por</label>
+                      <input
+                        type="text"
+                        placeholder="Nome do usuário..."
+                        value={filters.createdBy}
+                        onChange={(e) => setFilters(prev => ({ ...prev, createdBy: e.target.value }))}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                      />
+                    </div>
+
+                    {/* Filtro por tipo de busca */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Buscar em</label>
+                      <select
+                        value={filters.searchIn}
+                        onChange={(e) => setFilters(prev => ({ ...prev, searchIn: e.target.value }))}
+                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                      >
+                        <option value="title">Apenas título</option>
+                        <option value="description">Apenas descrição</option>
+                        <option value="both">Título e descrição</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  {/* Resumo dos filtros */}
+                  {activeFiltersCount > 0 && (
+                    <div className="mt-3 pt-3 border-t">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">{filteredOrders.length}</span> de <span className="font-medium">{orders.length}</span> pedidos encontrados
+                        {activeFiltersCount > 0 && (
+                          <span className="ml-2 text-red-600">
+                            ({activeFiltersCount} filtro{activeFiltersCount > 1 ? 's' : ''} ativo{activeFiltersCount > 1 ? 's' : ''})
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Mobile Card View */}
               <div className="md:hidden space-y-4">
@@ -467,33 +669,60 @@ export default function PedidosPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredOrders.map(order => (
-                      <tr key={order.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{order.title}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(order.status)}`}>
-                            {getStatusText(order.status)}
-                          </span>
-                        </td>
-                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${getPriorityClass(order.priority)}`}>
-                          {getPriorityText(order.priority)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{order.createdBy.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {order.lastEditedBy ? order.lastEditedBy.name : '-'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-6 text-sm">
-                          <div className="flex flex-wrap gap-2 min-w-max">
-                            {getActionButtons(order)}
+                    {filteredOrders.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-12 text-center">
+                          <div className="flex flex-col items-center justify-center space-y-3">
+                            <Package className="h-12 w-12 text-gray-300" />
+                            <div className="text-gray-500">
+                              <p className="text-lg font-medium">Nenhum pedido encontrado</p>
+                              <p className="text-sm">
+                                {activeFiltersCount > 0 
+                                  ? 'Tente ajustar os filtros ou limpar a busca'
+                                  : 'Ainda não há pedidos cadastrados'
+                                }
+                              </p>
+                            </div>
+                            {activeFiltersCount > 0 && (
+                              <button
+                                onClick={clearFilters}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                              >
+                                Limpar filtros
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredOrders.map(order => (
+                        <tr key={order.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{order.title}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(order.status)}`}>
+                              {getStatusText(order.status)}
+                            </span>
+                          </td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${getPriorityClass(order.priority)}`}>
+                            {getPriorityText(order.priority)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{order.createdBy.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {order.lastEditedBy ? order.lastEditedBy.name : '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-6 text-sm">
+                            <div className="flex flex-wrap gap-2 min-w-max">
+                              {getActionButtons(order)}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
