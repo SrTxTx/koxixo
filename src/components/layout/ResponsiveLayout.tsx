@@ -2,6 +2,7 @@
 
 import { ReactNode, useState } from 'react'
 import { Menu, X, Bell, Settings, User, Search } from 'lucide-react'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 interface ResponsiveLayoutProps {
   children: ReactNode
@@ -22,26 +23,26 @@ export function ResponsiveLayout({
   const [searchQuery, setSearchQuery] = useState('')
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
         <div className="container-responsive">
           <div className="flex items-center justify-between h-16">
             {/* Logo e Menu Mobile */}
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-5 w-5 text-gray-600 dark:text-gray-300" />
               </button>
               
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-red-600 dark:bg-red-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">K</span>
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-lg font-semibold text-gray-900">Koxixo</h1>
+                  <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Koxixo</h1>
                 </div>
               </div>
             </div>
@@ -64,25 +65,28 @@ export function ResponsiveLayout({
 
             {/* Ações do Header */}
             <div className="flex items-center space-x-2">
+              {/* Theme Toggle */}
+              <ThemeToggle />
+              
               {/* Notificações */}
-              <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <Bell className="h-5 w-5 text-gray-600" />
+              <button className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                 <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                   3
                 </span>
               </button>
 
               {/* Configurações */}
-              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <Settings className="h-5 w-5 text-gray-600" />
+              <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <Settings className="h-5 w-5 text-gray-600 dark:text-gray-300" />
               </button>
 
               {/* Perfil */}
-              <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-gray-600" />
+              <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                  <User className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                 </div>
-                <span className="hidden sm:block text-sm font-medium text-gray-700">Admin</span>
+                <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">Admin</span>
               </button>
             </div>
           </div>

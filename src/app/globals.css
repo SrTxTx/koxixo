@@ -27,6 +27,33 @@
   --border-light: #e5e7eb;
   --border-medium: #d1d5db;
   --border-dark: #9ca3af;
+}
+
+/* Dark Mode Variables */
+.dark {
+  /* Cores Principais (mantém o vermelho como identidade) */
+  --primary: #ef4444;
+  --primary-dark: #dc2626;
+  --primary-light: #1f1f23;
+  
+  /* Cores Secundárias */
+  --secondary: #9ca3af;
+  --accent: #fbbf24;
+  
+  /* Backgrounds */
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #262626;
+  
+  /* Textos */
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  
+  /* Bordas */
+  --border-light: #374151;
+  --border-medium: #4b5563;
+  --border-dark: #6b7280;
   
   /* Sombras */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
