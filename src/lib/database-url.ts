@@ -2,7 +2,12 @@ import { Prisma } from '@prisma/client'
 
 // Função para garantir que a URL do banco sempre tenha prepared_statements=false
 export const getDatabaseUrl = () => {
-  const baseUrl = process.env.DATABASE_URL || ''
+  // Em produção, preferir DIRECT_URL se disponível (evita pooler do Supabase)
+  const baseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL || ''
+  
+  if (!baseUrl) {
+    throw new Error('DATABASE_URL ou DIRECT_URL deve estar configurada')
+  }
   
   // Remover qualquer prepared_statements existente
   let cleanUrl = baseUrl.replace(/[&?]prepared_statements=(true|false)/g, '')

@@ -52,14 +52,31 @@ export const createAuthPrismaClient = () => {
   console.log('🔐 Criando cliente Prisma específico para autenticação')
   console.log('🔧 URL configurada:', databaseUrl.replace(/:[^:]*@/, ':***@'))
   
-  return new PrismaClient({
+  // Configuração específica para auth em ambiente serverless
+  const client = new PrismaClient({
     datasources: {
       db: {
         url: databaseUrl,
       },
     },
-    log: ['error']
+    log: ['error'],
+    // Configurações específicas para evitar prepared statements em produção
+    ...getProductionConfig()
   })
+
+  // Auto-disconnect após uso em serverless
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    // Configurar auto-disconnect após timeout
+    setTimeout(async () => {
+      try {
+        await client.$disconnect()
+      } catch (error) {
+        console.log('⚠️ Auto-disconnect error:', error)
+      }
+    }, 10000) // 10 segundos
+  }
+
+  return client
 }
 
 // Função para desconectar explicitamente (útil em serverless)

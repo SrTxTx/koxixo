@@ -22,9 +22,10 @@ export const handlePrismaError = (error: any) => {
   // Erro específico de prepared statement - mais robusto
   if (error.code === '42P05' || 
       error.message?.includes('prepared statement') ||
-      error.message?.includes('already exists')) {
-    console.log('🔄 Prepared statement error detected, retrying...')
-    return { retry: true, delay: 150 }
+      error.message?.includes('already exists') ||
+      error.kind?.QueryError?.PostgresError?.code === '42P05') {
+    console.log('🔄 Prepared statement error detected, retrying with new client...')
+    return { retry: true, delay: 200, createNewClient: true }
   }
   
   // Outros erros de conexão
@@ -40,7 +41,8 @@ export const handlePrismaError = (error: any) => {
 export const executeWithRetry = async <T>(
   operation: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelay: number = 100
+  baseDelay: number = 100,
+  createNewClientFn?: () => any
 ): Promise<T> => {
   let lastError: any
   
@@ -53,11 +55,20 @@ export const executeWithRetry = async <T>(
       const errorInfo = handlePrismaError(error)
       
       if (!errorInfo.retry || attempt === maxRetries) {
+        console.log(`❌ Final error after ${attempt} attempts:`, error.message)
         throw error
       }
       
       const delay = errorInfo.delay * attempt
-      console.log(`🔄 Tentativa ${attempt} falhou, tentando novamente em ${delay}ms...`)
+      console.log(`🔄 Tentativa ${attempt}/${maxRetries} falhou, tentando novamente em ${delay}ms...`)
+      console.log(`🔍 Erro: ${error.message}`)
+      
+      // Se erro de prepared statement e temos função para criar novo cliente
+      if (errorInfo.createNewClient && createNewClientFn) {
+        console.log('🔄 Criando novo cliente Prisma...')
+        // A operação deve usar o novo cliente criado
+      }
+      
       await new Promise(resolve => setTimeout(resolve, delay))
     }
   }

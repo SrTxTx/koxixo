@@ -20,18 +20,27 @@ export const authOptions: NextAuthOptions = {
         try {
           console.log('🔍 Tentativa de login para:', credentials.email)
           
-          // Criar uma instância específica para autenticação
-          const authPrisma = createAuthPrismaClient()
+          let authPrisma = createAuthPrismaClient()
+          let user = null
           
           try {
-            // Usar retry helper para problemas de prepared statements
-            const user = await executeWithRetry(async () => {
+            // Executar consulta com retry automático para problemas de prepared statements
+            user = await executeWithRetry(async () => {
               return await authPrisma.user.findUnique({
                 where: {
                   email: credentials.email
                 }
               })
-            }, 5, 150) // Aumentar tentativas e delay
+            }, 5, 150, () => {
+              // Criar novo cliente se ocorrer erro de prepared statement
+              try {
+                authPrisma.$disconnect()
+              } catch (e) {
+                console.log('⚠️ Error disconnecting old client:', e)
+              }
+              authPrisma = createAuthPrismaClient()
+              return authPrisma
+            })
 
           console.log('👤 User found:', user ? {
             id: user.id,
@@ -76,8 +85,13 @@ export const authOptions: NextAuthOptions = {
             console.error('💥 Erro durante autenticação:', error)
             return null
           } finally {
-            // Desconectar o cliente específico de autenticação
-            await authPrisma.$disconnect()
+            // Garantir desconexão do cliente específico de autenticação
+            try {
+              await authPrisma.$disconnect()
+              console.log('🔌 Cliente auth desconectado com sucesso')
+            } catch (disconnectError) {
+              console.log('⚠️ Erro ao desconectar cliente auth:', disconnectError)
+            }
           }
         } catch (error) {
           console.error('💥 Erro geral durante autenticação:', error)
