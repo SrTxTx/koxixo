@@ -17,8 +17,5 @@
       "NODE_ENV": "production",
       "SKIP_ENV_VALIDATION": "1"
     }
-  },
-  "experimental": {
-    "runtime": "nodejs18.x"
   }
 }
