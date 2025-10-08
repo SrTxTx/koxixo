@@ -2,6 +2,8 @@
 
 Sistema simples, rápido e bonito para gestão de pedidos com diferentes perfis de usuário.
 
+> 🚀 **Deploy Atualizado**: Banco Supabase configurado para produção - Outubro 2025
+
 ## 🚀 Tecnologias
 
 - **Next.js 14** - Framework React com App Router
