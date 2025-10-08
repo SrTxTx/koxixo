@@ -48,14 +48,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setThemeState(newTheme)
   }
 
-  // Evitar hydration mismatch
-  if (!mounted) {
-    return <div className="opacity-0">{children}</div>
-  }
-
+  // Sempre prover o contexto para evitar erro em consumidores antes do mount
+  // Durante a hidratação inicial, podemos esconder conteúdo para evitar flicker
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
-      {children}
+      <div className={mounted ? undefined : 'opacity-0'}>
+        {children}
+      </div>
     </ThemeContext.Provider>
   )
 }
