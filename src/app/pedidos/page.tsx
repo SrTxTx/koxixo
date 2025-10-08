@@ -287,14 +287,14 @@ export default function PedidosPage() {
 
   const getStatusClass = (status: string) => {
     switch (status) {
-      case 'PENDING': return 'bg-yellow-100 text-yellow-800'
-      case 'APPROVED': return 'bg-red-100 text-red-800'
-      case 'REJECTED': return 'bg-gray-100 text-gray-800'
-      case 'IN_PROGRESS': return 'bg-indigo-100 text-indigo-800'
-      case 'COMPLETED': return 'bg-green-100 text-green-800'
-      case 'DELIVERED': return 'bg-purple-100 text-purple-800'
-      case 'CANCELLED': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+      case 'APPROVED': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+      case 'REJECTED': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+      case 'IN_PROGRESS': return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300'
+      case 'COMPLETED': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+      case 'DELIVERED': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+      case 'CANCELLED': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
     }
   }
 
@@ -313,10 +313,10 @@ export default function PedidosPage() {
 
   const getPriorityClass = (priority: string) => {
     switch (priority) {
-      case 'HIGH': return 'text-red-600 font-semibold'
-      case 'MEDIUM': return 'text-yellow-600 font-medium'
-      case 'LOW': return 'text-green-600'
-      default: return 'text-gray-600'
+      case 'HIGH': return 'text-red-600 dark:text-red-400 font-semibold'
+      case 'MEDIUM': return 'text-yellow-600 dark:text-yellow-300 font-medium'
+      case 'LOW': return 'text-green-600 dark:text-green-400'
+      default: return 'text-gray-600 dark:text-gray-300'
     }
   }
 
@@ -414,9 +414,9 @@ export default function PedidosPage() {
   const canCreateOrder = session && ['ADMIN', 'VENDEDOR', 'ORCAMENTO'].includes(session.user.role)
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
+  <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
@@ -482,7 +482,7 @@ export default function PedidosPage() {
         <main className="flex-1 p-4 md:p-6">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-8 space-y-4 md:space-y-0">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Gerenciamento de Pedidos</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Gerenciamento de Pedidos</h2>
               {canCreateOrder && (
                 <Link href="/pedidos/novo">
                   <button className="flex items-center bg-red-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors w-full md:w-auto justify-center">
@@ -493,7 +493,7 @@ export default function PedidosPage() {
               )}
             </div>
 
-            <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm border">
+            <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 space-y-4 md:space-y-0">
                 <div className="relative w-full md:max-w-md">
                   <input
@@ -505,16 +505,16 @@ export default function PedidosPage() {
                     }
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400"
                   />
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-400" />
                 </div>
                 
                 <div className="flex space-x-2">
                   <button 
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`flex items-center border px-4 py-2 rounded-lg hover:bg-gray-50 w-full md:w-auto justify-center transition-colors ${
-                      showFilters ? 'bg-red-50 border-red-300 text-red-700' : 'text-gray-600'
+                    className={`flex items-center border px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 w-full md:w-auto justify-center transition-colors ${
+                      showFilters ? 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300' : 'text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600'
                     }`}
                   >
                     <Filter className="h-5 w-5 mr-2" />
@@ -529,7 +529,7 @@ export default function PedidosPage() {
                   {activeFiltersCount > 0 && (
                     <button
                       onClick={clearFilters}
-                      className="px-3 py-2 text-sm text-gray-500 hover:text-red-600 transition-colors"
+                      className="px-3 py-2 text-sm text-gray-500 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                     >
                       Limpar
                     </button>
@@ -539,15 +539,15 @@ export default function PedidosPage() {
 
               {/* Painel de filtros */}
               {showFilters && (
-                <div className="border-t pt-4 mb-4">
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mb-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                     {/* Filtro por Status */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                       <select
                         value={filters.status}
                         onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm dark:bg-gray-700 dark:text-gray-100"
                       >
                         <option value="">Todos</option>
                         <option value="PENDING">Pendente</option>
@@ -561,11 +561,11 @@ export default function PedidosPage() {
 
                     {/* Filtro por Prioridade */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Prioridade</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prioridade</label>
                       <select
                         value={filters.priority}
                         onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm dark:bg-gray-700 dark:text-gray-100"
                       >
                         <option value="">Todas</option>
                         <option value="HIGH">Alta</option>
@@ -576,11 +576,11 @@ export default function PedidosPage() {
 
                     {/* Filtro por Data */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Período</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Período</label>
                       <select
                         value={filters.dateRange}
                         onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm dark:bg-gray-700 dark:text-gray-100"
                       >
                         <option value="">Todos</option>
                         <option value="today">Hoje</option>
@@ -591,23 +591,23 @@ export default function PedidosPage() {
 
                     {/* Filtro por Criador */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Criado por</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Criado por</label>
                       <input
                         type="text"
                         placeholder="Nome do usuário..."
                         value={filters.createdBy}
                         onChange={(e) => setFilters(prev => ({ ...prev, createdBy: e.target.value }))}
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm dark:bg-gray-700 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400"
                       />
                     </div>
 
                     {/* Filtro por tipo de busca */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Buscar em</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar em</label>
                       <select
                         value={filters.searchIn}
                         onChange={(e) => setFilters(prev => ({ ...prev, searchIn: e.target.value }))}
-                        className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm dark:bg-gray-700 dark:text-gray-100"
                       >
                         <option value="title">Apenas título</option>
                         <option value="description">Apenas descrição</option>
@@ -619,10 +619,10 @@ export default function PedidosPage() {
                   {/* Resumo dos filtros */}
                   {activeFiltersCount > 0 && (
                     <div className="mt-3 pt-3 border-t">
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
                         <span className="font-medium">{filteredOrders.length}</span> de <span className="font-medium">{orders.length}</span> pedidos encontrados
                         {activeFiltersCount > 0 && (
-                          <span className="ml-2 text-red-600">
+                          <span className="ml-2 text-red-600 dark:text-red-400">
                             ({activeFiltersCount} filtro{activeFiltersCount > 1 ? 's' : ''} ativo{activeFiltersCount > 1 ? 's' : ''})
                           </span>
                         )}
@@ -635,14 +635,14 @@ export default function PedidosPage() {
               {/* Mobile Card View */}
               <div className="md:hidden space-y-4">
                 {filteredOrders.map(order => (
-                  <div key={order.id} className="border rounded-lg p-4 bg-gray-50">
+                  <div key={order.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-medium text-gray-900 text-sm">{order.title}</h3>
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm">{order.title}</h3>
                       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClass(order.status)}`}>
                         {getStatusText(order.status)}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-600 mb-2">
+                    <div className="text-xs text-gray-600 dark:text-gray-300 mb-2">
                       <div>Por: {order.createdBy.name}</div>
                       <div>Data: {new Date(order.createdAt).toLocaleDateString()}</div>
                       <div className={`${getPriorityClass(order.priority)}`}>
@@ -658,25 +658,25 @@ export default function PedidosPage() {
 
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridade</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Criado por</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Editado por</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-72">Ações</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Título</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Prioridade</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Criado por</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Editado por</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-72">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {filteredOrders.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center justify-center space-y-3">
-                            <Package className="h-12 w-12 text-gray-300" />
-                            <div className="text-gray-500">
+                            <Package className="h-12 w-12 text-gray-300 dark:text-gray-600" />
+                            <div className="text-gray-500 dark:text-gray-300">
                               <p className="text-lg font-medium">Nenhum pedido encontrado</p>
                               <p className="text-sm">
                                 {activeFiltersCount > 0 
@@ -698,9 +698,9 @@ export default function PedidosPage() {
                       </tr>
                     ) : (
                       filteredOrders.map(order => (
-                        <tr key={order.id} className="hover:bg-gray-50">
+                        <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{order.title}</div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{order.title}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(order.status)}`}>
@@ -710,11 +710,11 @@ export default function PedidosPage() {
                           <td className={`px-6 py-4 whitespace-nowrap text-sm ${getPriorityClass(order.priority)}`}>
                             {getPriorityText(order.priority)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{order.createdBy.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{order.createdBy.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {order.lastEditedBy ? order.lastEditedBy.name : '-'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {new Date(order.createdAt).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-6 text-sm">
@@ -744,12 +744,12 @@ export default function PedidosPage() {
       {/* Modal de Detalhes */}
       {viewingOrder && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg md:text-xl font-semibold text-gray-900">Detalhes do Pedido #{viewingOrder.id}</h3>
+              <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">Detalhes do Pedido #{viewingOrder.id}</h3>
               <button
                 onClick={() => setViewingOrder(null)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -760,14 +760,14 @@ export default function PedidosPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
-                  <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título</label>
+                  <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
                     {viewingOrder.title}
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                   <div className="text-sm">
                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusClass(viewingOrder.status)}`}>
                       {getStatusText(viewingOrder.status)}
@@ -778,46 +778,46 @@ export default function PedidosPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Prioridade</label>
-                  <div className={`text-sm p-3 rounded-md ${getPriorityClass(viewingOrder.priority)}`}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prioridade</label>
+                  <div className={`text-sm p-3 rounded-md ${getPriorityClass(viewingOrder.priority)} bg-gray-50 dark:bg-gray-700` }>
                     {getPriorityText(viewingOrder.priority)}
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Valor</label>
-                  <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor</label>
+                  <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
                     {viewingOrder.value ? `R$ ${viewingOrder.value.toFixed(2)}` : 'Não informado'}
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md min-h-[100px] whitespace-pre-wrap">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição</label>
+                <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md min-h-[100px] whitespace-pre-wrap">
                   {viewingOrder.description || 'Nenhuma descrição fornecida'}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Criado por</label>
-                  <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Criado por</label>
+                  <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
                     {viewingOrder.createdBy.name}
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Editado por</label>
-                  <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Editado por</label>
+                  <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
                     {viewingOrder.lastEditedBy ? viewingOrder.lastEditedBy.name : 'Nunca editado'}
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data de Criação</label>
-                <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data de Criação</label>
+                <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
                   {new Date(viewingOrder.createdAt).toLocaleString('pt-BR')}
                 </div>
               </div>
@@ -840,7 +840,7 @@ export default function PedidosPage() {
             <div className="mt-6 flex justify-end space-x-4">
               <button
                 onClick={() => setViewingOrder(null)}
-                className="px-6 py-2.5 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors font-medium"
+                className="px-6 py-2.5 text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
               >
                 Fechar
               </button>
@@ -864,43 +864,43 @@ export default function PedidosPage() {
       {/* Modal de Edição */}
       {editingOrder && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold mb-4">Editar Pedido #{editingOrder.id}</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Título do Pedido
                 </label>
                 <input
                   type="text"
                   value={editForm.title}
                   onChange={(e) => setEditForm({...editForm, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Descrição
                 </label>
                 <textarea
                   rows={3}
                   value={editForm.description}
                   onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 resize-vertical"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 resize-vertical dark:bg-gray-700 dark:text-gray-100"
                   placeholder="Descreva os detalhes do pedido..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Prioridade
                 </label>
                 <select
                   value={editForm.priority}
                   onChange={(e) => setEditForm({...editForm, priority: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100"
                 >
                   <option value="LOW">Baixa</option>
                   <option value="MEDIUM">Média</option>
@@ -909,7 +909,7 @@ export default function PedidosPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Valor (R$)
                 </label>
                 <input
@@ -917,7 +917,7 @@ export default function PedidosPage() {
                   step="0.01"
                   value={editForm.value}
                   onChange={(e) => setEditForm({...editForm, value: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -925,7 +925,7 @@ export default function PedidosPage() {
             <div className="flex justify-end space-x-4 mt-6">
               <button
                 onClick={handleCancelEdit}
-                className="px-6 py-2.5 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors font-medium"
+                className="px-6 py-2.5 text-gray-600 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
               >
                 Cancelar
               </button>
