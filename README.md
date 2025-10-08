@@ -2,7 +2,8 @@
 
 Sistema simples, rápido e bonito para gestão de pedidos com diferentes perfis de usuário.
 
-> 🚀 **Deploy Atualizado**: Banco Supabase configurado para produção - Outubro 2025
+> 🚀 **Deploy Atualizado**: Banco Supabase configurado para produção - Outubro 2025  
+> 🔧 **Status**: Build otimizado e pronto para Vercel
 
 ## 🚀 Tecnologias
 
