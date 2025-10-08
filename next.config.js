@@ -1,37 +1,31 @@
 /** @type {import('next').NextConfig} */
-const path = require('path')
-
 const nextConfig = {
-  // Configurações para resolver problemas de cache
   experimental: {
-    optimizePackageImports: ['next-auth', 'lucide-react']
+    // Simplificar configurações experimentais
+    optimizePackageImports: ['lucide-react']
   },
   
-  // Configurações do webpack para resolver problemas de módulos
-  webpack: (config, { dev, isServer }) => {
-    if (dev) {
-      // Limpa cache do webpack em desenvolvimento
-      config.cache = false
-    }
-    
-    // Configurações para resolver problemas de importação
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.resolve(__dirname, 'src'),
-      '@/components': path.resolve(__dirname, 'src/components'),
-      '@/contexts': path.resolve(__dirname, 'src/contexts'),
-      '@/lib': path.resolve(__dirname, 'src/lib'),
-      '@/types': path.resolve(__dirname, 'src/types'),
+  // Simplificar webpack config para compatibilidade
+  webpack: (config, { isServer }) => {
+    // Configuração mínima para resolver paths
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      }
     }
     
     return config
   },
   
-  // Configurações para resolver problemas de hidratação
+  // Configurações básicas
   reactStrictMode: true,
-  
-  // Configurações para melhorar performance
   swcMinify: true,
+  
+  // Configurações de output para Vercel
+  output: 'standalone'
 }
+
+module.exports = nextConfig
 
 module.exports = nextConfig
