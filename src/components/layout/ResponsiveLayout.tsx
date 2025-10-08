@@ -1,8 +1,9 @@
 'use client'
 
 import { ReactNode, useState } from 'react'
-import { Menu, X, Bell, Settings, User, Search } from 'lucide-react'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { Menu, X, Bell, Settings, User, Search, Home, ClipboardList, FileText, Users as UsersIcon } from 'lucide-react'
+import Link from 'next/link'
+import { ThemeToggle } from '../ui/ThemeToggle'
 
 interface ResponsiveLayoutProps {
   children: ReactNode
@@ -23,7 +24,7 @@ export function ResponsiveLayout({
   const [searchQuery, setSearchQuery] = useState('')
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
         <div className="container-responsive">
@@ -93,6 +94,28 @@ export function ResponsiveLayout({
         </div>
       </header>
 
+      {/* Sidebar Desktop */}
+  <aside className="hidden md:block fixed left-0 top-16 bottom-0 w-60 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4">
+        <nav className="space-y-1">
+          <Link href="/dashboard" className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <Home className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+            <span>Dashboard</span>
+          </Link>
+          <Link href="/pedidos" className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <ClipboardList className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+            <span>Pedidos</span>
+          </Link>
+          <Link href="/usuarios" className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <UsersIcon className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+            <span>Usuários</span>
+          </Link>
+          <Link href="/relatorios" className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <FileText className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+            <span>Relatórios</span>
+          </Link>
+        </nav>
+      </aside>
+
       {/* Sidebar Mobile Overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
@@ -100,23 +123,40 @@ export function ResponsiveLayout({
             className="absolute inset-0 bg-black bg-opacity-50"
             onClick={() => setSidebarOpen(false)}
           />
-          <div className="absolute left-0 top-0 h-full w-64 bg-white shadow-xl">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">Menu</h2>
+          <div className="absolute left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Menu</h2>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg hover:bg-gray-100"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 text-gray-700 dark:text-gray-200" />
               </button>
             </div>
-            {/* Conteúdo do menu mobile seria inserido aqui */}
+            <nav className="p-3 space-y-1">
+              <Link href="/dashboard" onClick={() => setSidebarOpen(false)} className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <Home className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+                <span>Dashboard</span>
+              </Link>
+              <Link href="/pedidos" onClick={() => setSidebarOpen(false)} className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <ClipboardList className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+                <span>Pedidos</span>
+              </Link>
+              <Link href="/usuarios" onClick={() => setSidebarOpen(false)} className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <UsersIcon className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+                <span>Usuários</span>
+              </Link>
+              <Link href="/relatorios" onClick={() => setSidebarOpen(false)} className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <FileText className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+                <span>Relatórios</span>
+              </Link>
+            </nav>
           </div>
         </div>
       )}
 
       {/* Conteúdo Principal */}
-      <main className="container-responsive py-6 sm:py-8">
+      <main className="container-responsive py-6 sm:py-8 md:ml-60">
         {/* Cabeçalho da Página */}
         <div className="mb-6 sm:mb-8">
           <div className="flex-responsive justify-between">

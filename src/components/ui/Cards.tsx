@@ -92,8 +92,8 @@ export function InfoCard({ title, children, icon: Icon, actions, className = '' 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             {Icon && (
-              <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center">
-                <Icon className="h-4 w-4 text-red-600" />
+              <div className="w-8 h-8 bg-red-50 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
+                <Icon className="h-4 w-4 text-red-600 dark:text-red-400" />
               </div>
             )}
             <h3 className="heading-3">{title}</h3>
@@ -128,11 +128,11 @@ export function ActionCard({
   disabled = false
 }: ActionCardProps) {
   const colorClasses = {
-    red: 'border-red-200 hover:border-red-300 hover:bg-red-50',
-    blue: 'border-blue-200 hover:border-blue-300 hover:bg-blue-50',
-    green: 'border-green-200 hover:border-green-300 hover:bg-green-50',
-    yellow: 'border-yellow-200 hover:border-yellow-300 hover:bg-yellow-50',
-    purple: 'border-purple-200 hover:border-purple-300 hover:bg-purple-50'
+    red: 'border-red-200 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/10',
+    blue: 'border-blue-200 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/10',
+    green: 'border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/10',
+    yellow: 'border-yellow-200 dark:border-yellow-800 hover:border-yellow-300 dark:hover:border-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/10',
+    purple: 'border-purple-200 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/10'
   }
 
   const iconColorClasses = {
@@ -148,19 +148,19 @@ export function ActionCard({
       onClick={onClick}
       disabled={disabled}
       className={`
-        w-full p-6 bg-white border-2 rounded-xl text-left transition-all duration-200
+        w-full p-6 bg-white dark:bg-gray-800 border-2 rounded-xl text-left transition-all duration-200
         ${disabled 
-          ? 'opacity-50 cursor-not-allowed border-gray-200' 
+          ? 'opacity-50 cursor-not-allowed border-gray-200 dark:border-gray-700' 
           : `cursor-pointer ${colorClasses[color]}`
         }
       `}
     >
       <div className="flex items-start space-x-4">
-        <div className={`w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center ${!disabled && iconColorClasses[color]}`}>
+        <div className={`w-10 h-10 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center ${!disabled && iconColorClasses[color]}`}>
           <Icon className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">{title}</h3>
           <p className="text-body">{description}</p>
         </div>
       </div>

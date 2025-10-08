@@ -202,12 +202,12 @@ export default function DashboardPage() {
               {recentOrders.map((order) => {
                 const statusInfo = getStatusBadge(order.status)
                 return (
-                  <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 truncate">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                         {order.title}
                       </h4>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         Por {order.createdBy.name} • {new Date(order.createdAt).toLocaleDateString()}
                       </p>
                     </div>
