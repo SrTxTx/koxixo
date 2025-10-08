@@ -4,9 +4,9 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PlusCircle, User, Edit, Trash2, Eye, EyeOff, Search, UserPlus } from 'lucide-react'
-import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
-import { InfoCard, ActionCard } from '@/components/ui/Cards'
-import { Button, Input, Select, Alert, LoadingSpinner } from '@/components/ui/Forms'
+import { ResponsiveLayout } from '../../components/layout/ResponsiveLayout'
+import { InfoCard, ActionCard } from '../../components/ui/Cards'
+import { Button, Input, Select, Alert, LoadingSpinner } from '../../components/ui/Forms'
 
 interface User {
   id: number

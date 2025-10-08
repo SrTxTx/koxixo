@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import { PlusCircle, Package, Filter, Search, User, LogOut, Menu, BarChart3, Eye } from 'lucide-react'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { ThemeToggle } from '../../components/ui/ThemeToggle'
 import Link from 'next/link'
 
 interface Order {

@@ -3,7 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
+import { ResponsiveLayout } from '../../components/layout/ResponsiveLayout'
 
 export default function RelatoriosPage() {
   const { data: session, status } = useSession()

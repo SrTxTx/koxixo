@@ -4,9 +4,9 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Package, CheckCircle, XCircle, Clock, TrendingUp, Users, DollarSign, Calendar, Plus } from 'lucide-react'
-import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
-import { StatCard, InfoCard, GridLayout, ActionCard } from '@/components/ui/Cards'
-import { Button, LoadingSpinner } from '@/components/ui/Forms'
+import { ResponsiveLayout } from '../../components/layout/ResponsiveLayout'
+import { StatCard, InfoCard, GridLayout, ActionCard } from '../../components/ui/Cards'
+import { Button, LoadingSpinner } from '../../components/ui/Forms'
 import Link from 'next/link'
 
 interface DashboardStats {

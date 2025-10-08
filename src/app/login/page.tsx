@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Lock, Mail } from 'lucide-react'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { ThemeToggle } from '../../components/ui/ThemeToggle'
 
 export default function LoginPage() {
   const router = useRouter()
