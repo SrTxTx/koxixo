@@ -17,7 +17,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         </p>
 
         {error?.message && (
-          <details className="mb-4 text-xs text-gray-500 dark:text-gray-400 whitespace-pre-wrap break-words">
+          <details className="mb-4 text-xs text-gray-500 dark:text-gray-300 whitespace-pre-wrap break-words">
             <summary className="cursor-pointer select-none mb-2">Detalhes técnicos</summary>
             {error.message}
             {error.digest ? `\nRef: ${error.digest}` : ''}

@@ -207,7 +207,7 @@ export default function DashboardPage() {
                       <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                         {order.title}
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-500 dark:text-gray-300">
                         Por {order.createdBy.name} • {new Date(order.createdAt).toLocaleDateString()}
                       </p>
                     </div>

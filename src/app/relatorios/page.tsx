@@ -33,7 +33,7 @@ export default function RelatoriosPage() {
       <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-center text-center h-96">
         <div>
           <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">Em Breve</h2>
-          <p className="text-gray-500 dark:text-gray-400 mt-2">
+          <p className="text-gray-500 dark:text-gray-300 mt-2">
             Estamos trabalhando para trazer os melhores relatórios para você.
           </p>
         </div>

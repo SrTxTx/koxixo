@@ -33,7 +33,7 @@ export function StatCard({
   const changeClasses = {
     positive: 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30',
     negative: 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30',
-    neutral: 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700'
+  neutral: 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'
   }
 
   if (loading) {
@@ -55,7 +55,7 @@ export function StatCard({
     <div className="card p-6 hover:shadow-lg transition-all duration-300">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-small font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+          <p className="text-small font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wide">
             {title}
           </p>
           <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1">
