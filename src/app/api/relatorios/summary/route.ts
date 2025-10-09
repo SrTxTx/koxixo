@@ -58,34 +58,46 @@ export async function GET(req: NextRequest) {
       if (dateTo) where.createdAt.lte = dateTo
     }
 
-    const [totalOrders, sumAgg, byStatus, byPriority, groupedCreators, ordersForSeries] = await Promise.all([
-      prisma.order.count({ where }),
-      prisma.order.aggregate({ where, _sum: { value: true } }),
-      prisma.order.groupBy({ where, by: ['status'], _count: { _all: true } }),
-      prisma.order.groupBy({ where, by: ['priority'], _count: { _all: true } }),
-      prisma.order.groupBy({ where, by: ['createdById'], _count: { _all: true } }),
-      prisma.order.findMany({ where, select: { createdAt: true } })
-    ])
+    // Buscar pedidos filtrados uma vez e agregar em memória
+    const orders = await prisma.order.findMany({
+      where,
+      select: { id: true, status: true, priority: true, value: true, createdAt: true, createdById: true },
+    })
 
-    const totalValue = sumAgg._sum.value || 0
+    const totalOrders = orders.length
+    const totalValue = orders.reduce((sum, o) => sum + (o.value ?? 0), 0)
 
-    const creatorIds = groupedCreators.map((g) => g.createdById).filter((v): v is number => typeof v === 'number')
+    const statusMap = new Map<string, number>()
+    const priorityMap = new Map<string, number>()
+    const creatorsMap = new Map<number, number>()
+
+    for (const o of orders) {
+      statusMap.set(o.status, (statusMap.get(o.status) || 0) + 1)
+      priorityMap.set(o.priority, (priorityMap.get(o.priority) || 0) + 1)
+      if (typeof o.createdById === 'number') {
+        creatorsMap.set(o.createdById, (creatorsMap.get(o.createdById) || 0) + 1)
+      }
+    }
+
+    const byStatus = Array.from(statusMap.entries()).map(([status, count]) => ({ status, count }))
+    const byPriority = Array.from(priorityMap.entries()).map(([priority, count]) => ({ priority, count }))
+
+    const creatorIds = Array.from(creatorsMap.keys())
     const users = creatorIds.length
       ? await prisma.user.findMany({ where: { id: { in: creatorIds } }, select: { id: true, name: true } })
       : []
     const userMap = new Map(users.map((u) => [u.id, u.name]))
-    const topCreators = groupedCreators
-      .map((g) => ({ id: g.createdById, name: userMap.get(g.createdById!) || `Usuário #${g.createdById}`, count: g._count._all }))
+    const topCreators = Array.from(creatorsMap.entries())
+      .map(([id, count]) => ({ id, count, name: userMap.get(id) || `Usuário #${id}` }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10)
 
-    // Serie por dia
+    // Série por dia
     const seriesMap = new Map<string, number>()
     const addDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
     let startForSeries: Date | undefined = dateFrom
     let endForSeries: Date | undefined = dateTo
     if (!startForSeries || !endForSeries) {
-      // fallback: últimos 30 dias
       const now = new Date()
       endForSeries = endForSeries || now
       const d = new Date(endForSeries)
@@ -100,7 +112,7 @@ export async function GET(req: NextRequest) {
         cursor.setDate(cursor.getDate() + 1)
       }
     }
-    for (const o of ordersForSeries) {
+    for (const o of orders) {
       const key = addDay(o.createdAt).toISOString().slice(0, 10)
       if (seriesMap.has(key)) seriesMap.set(key, (seriesMap.get(key) || 0) + 1)
     }
@@ -108,8 +120,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       totals: { totalOrders, totalValue },
-      byStatus: byStatus.map((g) => ({ status: g.status, count: g._count._all })),
-      byPriority: byPriority.map((g) => ({ priority: g.priority, count: g._count._all })),
+      byStatus,
+      byPriority,
       byDay,
       topCreators
     })
