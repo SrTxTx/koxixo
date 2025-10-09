@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { apiError, withTimeout } from '@/lib/api'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,15 +18,17 @@ type Notif = {
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    return apiError(401, 'Não autorizado')
   }
 
   try {
     const { searchParams } = new URL(req.url)
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 50)
+  const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 50)
+  const sinceRaw = searchParams.get('since')
+  const since = sinceRaw ? new Date(sinceRaw) : undefined
 
     // Buscar pedidos recentes com campos necessários para derivar eventos
-    const orders = await prisma.order.findMany({
+    const orders = await withTimeout(prisma.order.findMany({
       orderBy: { updatedAt: 'desc' },
       take: 100, // buscar um pouco mais para derivar eventos suficientes
       select: {
@@ -48,7 +51,7 @@ export async function GET(req: NextRequest) {
         lastEditedAt: true,
         lastEditedBy: { select: { name: true } },
       },
-    })
+    }), 8000)
 
   const userId = parseInt(session.user.id, 10)
   const role = session.user.role as string
@@ -150,13 +153,21 @@ export async function GET(req: NextRequest) {
       }
     })
 
+    // Filtrar por since (eventos mais novos que o timestamp informado)
+    const bySince = since && !isNaN(since.getTime())
+      ? filtered.filter(e => new Date(e.at).getTime() > since.getTime())
+      : filtered
+
     // Ordenar por data desc e limitar
-    filtered.sort((a, b) => (a.at > b.at ? -1 : a.at < b.at ? 1 : 0))
-    const items = filtered.slice(0, limit).map(({ createdById, ...rest }) => rest)
+    bySince.sort((a, b) => (a.at > b.at ? -1 : a.at < b.at ? 1 : 0))
+    const items = bySince.slice(0, limit).map(({ createdById, ...rest }) => rest)
 
     return NextResponse.json({ items })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao listar notificações:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    if (String(error?.message || '').toLowerCase().includes('tempo limite')) {
+      return apiError(504, 'Serviço indisponível', { message: 'Tempo limite ao carregar notificações' })
+    }
+    return apiError(500, 'Erro interno do servidor', { message: error?.message })
   }
 }

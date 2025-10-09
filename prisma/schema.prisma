@@ -79,4 +79,10 @@ model Order {
   lastEditedAt   DateTime? @map("last_edited_at")
 
   @@map("orders")
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([createdById])
+  @@index([status, createdAt])
+  @@index([createdById, createdAt])
 }

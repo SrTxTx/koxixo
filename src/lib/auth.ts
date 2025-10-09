@@ -56,17 +56,17 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
-          console.log('🔐 Comparing passwords...')
-          console.log('Input password:', credentials.password)
-          console.log('Stored hash length:', user.password.length)
-          console.log('Hash starts with:', user.password.substring(0, 20) + '...')
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🔐 Validando credenciais (detalhes sensíveis ocultos em produção)')
+          }
 
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
             user.password
           )
-
-          console.log('✅ Password valid?', isPasswordValid)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('✅ Senha válida?', isPasswordValid)
+          }
 
           if (!isPasswordValid) {
             console.log('❌ Invalid password for user:', credentials.email)

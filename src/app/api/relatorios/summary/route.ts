@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { z } from 'zod'
+import { apiError, withTimeout } from '@/lib/api'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,13 +17,17 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+      return apiError(401, 'Não autorizado')
     }
 
     const { searchParams } = new URL(req.url)
-  const status = searchParams.get('status') || undefined
-  const priority = searchParams.get('priority') || undefined
-  const createdBy = searchParams.get('createdBy') || undefined
+    const status = searchParams.get('status') || undefined
+    const priority = searchParams.get('priority') || undefined
+    const createdBy = searchParams.get('createdBy') || undefined
+    const validStatus = ['PENDING','APPROVED','REJECTED','IN_PROGRESS','COMPLETED','DELIVERED','CANCELLED'] as const
+    const validPriority = ['LOW','MEDIUM','HIGH'] as const
+    if (status && !validStatus.includes(status as any)) return NextResponse.json({ error: 'Status inválido' }, { status: 400 })
+    if (priority && !validPriority.includes(priority as any)) return NextResponse.json({ error: 'Prioridade inválida' }, { status: 400 })
     const startDate = parseDate(searchParams.get('startDate'))
     const endDate = parseDate(searchParams.get('endDate'))
     const range = searchParams.get('range') || undefined // today | week | month
@@ -44,6 +50,13 @@ export async function GET(req: NextRequest) {
         dateFrom = d
         dateTo = now
       }
+    } else if (!dateFrom && !dateTo && !range) {
+      // Limite padrão: últimos 90 dias
+      const now = new Date()
+      const d = new Date(now)
+      d.setDate(now.getDate() - 90)
+      dateFrom = d
+      dateTo = now
     }
 
     const where: any = {}
@@ -64,11 +77,11 @@ export async function GET(req: NextRequest) {
       if (dateTo) where.createdAt.lte = dateTo
     }
 
-    // Buscar pedidos filtrados uma vez e agregar em memória
-    const orders = await prisma.order.findMany({
+  // Buscar pedidos filtrados uma vez e agregar em memória (janela limitada por padrão)
+    const orders = await withTimeout(prisma.order.findMany({
       where,
       select: { id: true, status: true, priority: true, value: true, createdAt: true, createdById: true },
-    })
+    }), 8000)
 
     const totalOrders = orders.length
     const totalValue = orders.reduce((sum, o) => sum + (o.value ?? 0), 0)
@@ -90,7 +103,7 @@ export async function GET(req: NextRequest) {
 
     const creatorIds = Array.from(creatorsMap.keys())
     const users = creatorIds.length
-      ? await prisma.user.findMany({ where: { id: { in: creatorIds } }, select: { id: true, name: true } })
+      ? await withTimeout(prisma.user.findMany({ where: { id: { in: creatorIds } }, select: { id: true, name: true } }), 8000)
       : []
     const userMap = new Map(users.map((u) => [u.id, u.name]))
     const topCreators = Array.from(creatorsMap.entries())
@@ -133,6 +146,9 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     console.error('Erro ao gerar relatórios:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor', message: error?.message }, { status: 500 })
+    if (String(error?.message || '').toLowerCase().includes('tempo limite')) {
+      return apiError(504, 'Serviço indisponível', { message: 'Tempo limite ao gerar relatórios' })
+    }
+    return apiError(500, 'Erro interno do servidor', { message: error?.message })
   }
 }

@@ -5,6 +5,7 @@ import { Menu, X, Bell, Settings, User, Search, Home, ClipboardList, FileText, U
 import Link from 'next/link'
 import { ThemeToggle } from '../ui/ThemeToggle'
 import { signOut } from 'next-auth/react'
+import { usePathname } from 'next/navigation'
 
 interface ResponsiveLayoutProps {
   children: ReactNode
@@ -21,6 +22,7 @@ export function ResponsiveLayout({
   actions,
   showSearch = false 
 }: ResponsiveLayoutProps) {
+  const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [notifOpen, setNotifOpen] = useState(false)
@@ -35,14 +37,23 @@ export function ResponsiveLayout({
     let mounted = true
     const fetchNotifs = async () => {
       try {
-        const res = await fetch('/api/notifications?limit=20', { cache: 'no-store', credentials: 'include' })
+        const lastSeen = localStorage.getItem('notif:lastSeen')
+        const url = new URL('/api/notifications', window.location.origin)
+        url.searchParams.set('limit', '20')
+        if (lastSeen) url.searchParams.set('since', lastSeen)
+        const res = await fetch(url.toString(), { cache: 'no-store', credentials: 'include' })
         if (!res.ok) return
         const data = await res.json()
         if (!mounted) return
         const items = (data?.items || []) as Array<{ id: string; message: string; at: string; orderId: number }>
-        setNotifications(items)
+        // Se veio só delta (since), mesclar simples mantendo ordem por data
+        setNotifications(prev => {
+          const map = new Map<string, { id: string; message: string; at: string; orderId: number }>()
+          for (const n of [...items, ...prev]) map.set(n.id, n)
+          const merged = Array.from(map.values()).sort((a, b) => (a.at > b.at ? -1 : a.at < b.at ? 1 : 0)).slice(0, 50)
+          return merged
+        })
         // compute unread based on last seen
-        const lastSeen = localStorage.getItem('notif:lastSeen')
         if (lastSeen) {
           const last = new Date(lastSeen).getTime()
           const count = items.filter(n => new Date(n.at).getTime() > last).length
@@ -128,7 +139,7 @@ export function ResponsiveLayout({
               {/* Notificações */}
               <div className="relative" ref={notifRef}>
                 <button
-                  aria-haspopup="true"
+                  aria-haspopup="menu"
                   aria-expanded={notifOpen}
                   onClick={(e) => { 
                     e.stopPropagation(); 
@@ -175,7 +186,7 @@ export function ResponsiveLayout({
               {/* Configurações */}
               <div className="relative" ref={settingsRef}>
                 <button
-                  aria-haspopup="true"
+                  aria-haspopup="menu"
                   aria-expanded={settingsOpen}
                   onClick={(e) => { e.stopPropagation(); setSettingsOpen((v) => !v); setNotifOpen(false) }}
                   className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -220,19 +231,19 @@ export function ResponsiveLayout({
       {/* Sidebar Desktop */}
   <aside className="hidden md:block fixed left-0 top-16 bottom-0 w-60 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4">
         <nav className="space-y-1">
-          <Link href="/dashboard" className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+          <Link href="/dashboard" className={`flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${pathname?.startsWith('/dashboard') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : ''}`} aria-current={pathname?.startsWith('/dashboard') ? 'page' : undefined}>
             <Home className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
             <span>Dashboard</span>
           </Link>
-          <Link href="/pedidos" className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+          <Link href="/pedidos" className={`flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${pathname?.startsWith('/pedidos') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : ''}`} aria-current={pathname?.startsWith('/pedidos') ? 'page' : undefined}>
             <ClipboardList className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
             <span>Pedidos</span>
           </Link>
-          <Link href="/usuarios" className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+          <Link href="/usuarios" className={`flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${pathname?.startsWith('/usuarios') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : ''}`} aria-current={pathname?.startsWith('/usuarios') ? 'page' : undefined}>
             <UsersIcon className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
             <span>Usuários</span>
           </Link>
-          <Link href="/relatorios" className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+          <Link href="/relatorios" className={`flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${pathname?.startsWith('/relatorios') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : ''}`} aria-current={pathname?.startsWith('/relatorios') ? 'page' : undefined}>
             <FileText className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
             <span>Relatórios</span>
           </Link>

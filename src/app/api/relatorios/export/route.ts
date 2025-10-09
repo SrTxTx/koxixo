@@ -3,8 +3,11 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import PDFDocument from 'pdfkit'
+import { z } from 'zod'
+import { apiError, withTimeout } from '@/lib/api'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 function parseDate(value?: string | null) {
   if (!value) return undefined
@@ -24,22 +27,32 @@ function csvEscape(value: any): string {
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
   if (!session) {
-    return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
+    return apiError(401, 'Não autorizado')
   }
 
   try {
     const { searchParams } = new URL(req.url)
-    const status = searchParams.get('status') || undefined
-    const priority = searchParams.get('priority') || undefined
+  const status = searchParams.get('status') || undefined
+  const priority = searchParams.get('priority') || undefined
     const createdBy = searchParams.get('createdBy') || undefined
     const startDate = parseDate(searchParams.get('startDate'))
     const endDate = parseDate(searchParams.get('endDate'))
     const range = searchParams.get('range') || undefined
-    const format = (searchParams.get('format') || 'csv').toLowerCase()
-    const fieldsParam = searchParams.get('fields') || ''
-    const selectedFields = (fieldsParam ? fieldsParam.split(',') : [
-      'id','title','status','priority','value','createdAt','createdBy'
-    ]).filter(Boolean)
+  const format = (searchParams.get('format') || 'csv').toLowerCase()
+  const fieldsParam = searchParams.get('fields') || ''
+    const allowedFields = ['id','title','description','status','priority','value','createdAt','dueDate','createdBy','lastEditedBy','approvedBy','rejectedBy','rejectionReason','completedAt','deliveredAt'] as const
+    const selectedFieldsRaw = (fieldsParam ? fieldsParam.split(',') : ['id','title','status','priority','value','createdAt','createdBy']).filter(Boolean)
+    const selectedFields = selectedFieldsRaw.filter(f => (allowedFields as readonly string[]).includes(f))
+    if (selectedFields.length === 0) {
+      return apiError(400, 'Nenhum campo válido selecionado')
+    }
+    if (!['csv','pdf'].includes(format)) {
+      return apiError(400, 'Formato inválido')
+    }
+    const validStatus = ['PENDING','APPROVED','REJECTED','IN_PROGRESS','COMPLETED','DELIVERED','CANCELLED'] as const
+    const validPriority = ['LOW','MEDIUM','HIGH'] as const
+  if (status && !validStatus.includes(status as any)) return apiError(400, 'Status inválido')
+  if (priority && !validPriority.includes(priority as any)) return apiError(400, 'Prioridade inválida')
 
     let dateFrom = startDate
     let dateTo = endDate
@@ -65,10 +78,10 @@ export async function GET(req: NextRequest) {
     if (status) where.status = status
     if (priority) where.priority = priority
     if (createdBy) {
-      const users = await prisma.user.findMany({
+      const users = await withTimeout(prisma.user.findMany({
         where: { name: { contains: createdBy, mode: 'insensitive' } },
         select: { id: true },
-      })
+      }), 8000)
       const ids = users.map((u) => u.id)
       where.createdById = ids.length ? { in: ids } : -1
     }
@@ -78,7 +91,7 @@ export async function GET(req: NextRequest) {
       if (dateTo) where.createdAt.lte = dateTo
     }
 
-    const orders = await prisma.order.findMany({
+    const orders = await withTimeout(prisma.order.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -87,7 +100,7 @@ export async function GET(req: NextRequest) {
         approvedBy: { select: { name: true } },
         rejectedBy: { select: { name: true } },
       },
-    })
+    }), 8000)
     const columns: { key: string; label: string; getter: (o: any) => any }[] = [
       { key: 'id', label: 'ID', getter: (o) => o.id },
       { key: 'title', label: 'Título', getter: (o) => o.title },
@@ -198,6 +211,9 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: any) {
     console.error('Erro ao exportar CSV/PDF:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor', message: error?.message }, { status: 500 })
+    if (String(error?.message || '').toLowerCase().includes('tempo limite')) {
+      return apiError(504, 'Serviço indisponível', { message: 'Tempo limite ao exportar relatório' })
+    }
+    return apiError(500, 'Erro interno do servidor', { message: error?.message })
   }
 }

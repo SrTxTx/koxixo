@@ -2,7 +2,8 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import useSWR from 'swr'
 import { PlusCircle, Package, Filter, Search, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
@@ -28,6 +29,10 @@ export default function PedidosPage() {
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+  const [sortBy, setSortBy] = useState<'createdAt'|'updatedAt'|'value'|'priority'|'status'|'title'>('createdAt')
+  const [sortDir, setSortDir] = useState<'asc'|'desc'>('desc')
   const [searchTerm, setSearchTerm] = useState('')
   // layout global cuida do sidebar/header
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
@@ -42,6 +47,20 @@ export default function PedidosPage() {
     createdBy: '',
     searchIn: 'title' // 'title', 'description', 'both'
   })
+
+  // Aplicar preferências salvas (pageSize, status/priority padrão)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('koxixo:preferences:v1')
+      if (raw) {
+        const prefs = JSON.parse(raw)
+        const ps = Number(prefs?.orders?.pageSize)
+        if (ps === 20 || ps === 50) setPageSize(ps)
+        if (typeof prefs?.orders?.defaultStatus === 'string') setFilters(f => ({ ...f, status: prefs.orders.defaultStatus }))
+        if (typeof prefs?.orders?.defaultPriority === 'string') setFilters(f => ({ ...f, priority: prefs.orders.defaultPriority }))
+      }
+    } catch {}
+  }, [])
   
   const [editForm, setEditForm] = useState({
     title: '',
@@ -50,33 +69,45 @@ export default function PedidosPage() {
     value: ''
   })
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true)
-    try {
-      const response = await fetch('/api/pedidos', {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include' // Importante para incluir cookies de sessão
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setOrders(data)
-      } else {
-        console.error('Erro na resposta da API:', response.status, response.statusText)
-        if (response.status === 401) {
-          // Se não autorizado, redirecionar para login
-          router.push('/login')
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao buscar pedidos:', error)
-    } finally {
+  const fetcher = async (url: string) => {
+    const res = await fetch(url, { credentials: 'include', cache: 'no-store' })
+    if (res.status === 401) {
+      router.push('/login')
+      return []
+    }
+    if (!res.ok) throw new Error(`Erro ${res.status}`)
+    const total = Number(res.headers.get('X-Total-Count') || '0')
+    const data = await res.json()
+    ;(data as any)._total = total
+    return data
+  }
+
+  const buildQuery = () => {
+    const sp = new URLSearchParams()
+    sp.set('page', String(page))
+    sp.set('pageSize', String(pageSize))
+    sp.set('sortBy', sortBy)
+    sp.set('sortDir', sortDir)
+    if (filters.status) sp.set('status', filters.status)
+    if (filters.priority) sp.set('priority', filters.priority)
+    if (filters.dateRange) sp.set('range', filters.dateRange)
+    if (filters.createdBy) sp.set('createdBy', filters.createdBy)
+    if (searchTerm) {
+      sp.set('search', searchTerm)
+      sp.set('searchIn', filters.searchIn)
+    }
+    return `/api/pedidos?${sp.toString()}`
+  }
+
+  const { data, isLoading, mutate } = useSWR<Order[]>(session ? buildQuery() : null, fetcher, { revalidateOnFocus: true, keepPreviousData: true })
+
+  useEffect(() => {
+    if (data) {
+      const arr = data as unknown as Order[] & { _total?: number }
+      setOrders(arr)
       setLoading(false)
     }
-  }, [router])
+  }, [data])
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -85,10 +116,8 @@ export default function PedidosPage() {
   }, [status, router])
 
   useEffect(() => {
-    if (session) {
-      fetchOrders()
-    }
-  }, [session, fetchOrders])
+    if (session) mutate()
+  }, [session, mutate])
 
   const handleOrderAction = async (orderId: number, action: string, rejectionReason?: string) => {
     try {
@@ -102,7 +131,7 @@ export default function PedidosPage() {
       })
 
       if (response.ok) {
-        await fetchOrders() // Recarrega a lista
+  await mutate() // Revalida lista
       } else {
         const data = await response.json()
         if (response.status === 401) {
@@ -117,7 +146,11 @@ export default function PedidosPage() {
     }
   }
 
+  const lastFocusedRef = useRef<HTMLElement | null>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+
   const handleEditOrder = (order: Order) => {
+    lastFocusedRef.current = document.activeElement as HTMLElement
     setEditingOrder(order)
     setEditForm({
       title: order.title,
@@ -146,7 +179,7 @@ export default function PedidosPage() {
       })
 
       if (response.ok) {
-        await fetchOrders()
+  await mutate()
         setEditingOrder(null)
         setEditForm({ title: '', description: '', priority: 'MEDIUM', value: '' })
       } else {
@@ -166,6 +199,8 @@ export default function PedidosPage() {
   const handleCancelEdit = () => {
     setEditingOrder(null)
     setEditForm({ title: '', description: '', priority: 'MEDIUM', value: '' })
+    // restaurar foco no elemento de origem
+    setTimeout(() => lastFocusedRef.current?.focus(), 0)
   }
 
   const getActionButtons = (order: Order) => {
@@ -670,13 +705,14 @@ export default function PedidosPage() {
 
       {/* Modal de Detalhes */}
       {viewingOrder && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="order-details-title" onKeyDown={(e) => { if (e.key === 'Escape') setViewingOrder(null) }}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700" tabIndex={-1}>
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">Detalhes do Pedido #{viewingOrder.id}</h3>
+              <h3 id="order-details-title" className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">Detalhes do Pedido #{viewingOrder.id}</h3>
               <button
                 onClick={() => setViewingOrder(null)}
                 className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100"
+                aria-label="Fechar"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -790,9 +826,9 @@ export default function PedidosPage() {
 
       {/* Modal de Edição */}
       {editingOrder && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold mb-4">Editar Pedido #{editingOrder.id}</h3>
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="order-edit-title" onKeyDown={(e) => { if (e.key === 'Escape') handleCancelEdit() }}>
+          <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700" tabIndex={-1}>
+            <h3 id="order-edit-title" className="text-lg font-semibold mb-4">Editar Pedido #{editingOrder.id}</h3>
             
             <div className="space-y-4">
               <div>

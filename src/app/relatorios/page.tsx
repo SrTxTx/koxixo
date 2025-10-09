@@ -33,6 +33,22 @@ export default function RelatoriosPage() {
     'id','title','status','priority','value','createdAt','createdBy'
   ])
 
+  // Inicializar com preferências padrão salvas localmente (se existirem)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('koxixo:preferences:v1')
+      if (raw) {
+        const prefs = JSON.parse(raw)
+        if (Array.isArray(prefs?.reports?.defaultFields)) {
+          setExportFields(prefs.reports.defaultFields)
+        }
+        if (prefs?.reports?.defaultFormat === 'csv' || prefs?.reports?.defaultFormat === 'pdf') {
+          setExportFormat(prefs.reports.defaultFormat)
+        }
+      }
+    } catch {}
+  }, [])
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login')
