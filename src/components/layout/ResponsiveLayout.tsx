@@ -189,7 +189,7 @@ export function ResponsiveLayout({
                     </div>
                     <div className="py-1">
                       <Link href="/usuarios" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700" role="menuitem">Perfil/Usuários</Link>
-                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700" role="menuitem" onClick={() => alert('Configurações: em breve')}>Preferências</button>
+                      <Link href="/preferencias" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700" role="menuitem">Preferências</Link>
                     </div>
                     <div className="border-t border-gray-200 dark:border-gray-700">
                       <button

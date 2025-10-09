@@ -1,11 +1,11 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
-import { PlusCircle, Package, Filter, Search, User, LogOut, Menu, BarChart3, Eye } from 'lucide-react'
-import { ThemeToggle } from '../../components/ui/ThemeToggle'
+import { PlusCircle, Package, Filter, Search, Eye } from 'lucide-react'
 import Link from 'next/link'
+import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
 
 interface Order {
   id: number
@@ -29,7 +29,7 @@ export default function PedidosPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  // layout global cuida do sidebar/header
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null)
   
@@ -414,72 +414,8 @@ export default function PedidosPage() {
   const canCreateOrder = session && ['ADMIN', 'VENDEDOR', 'ORCAMENTO'].includes(session.user.role)
 
   return (
-  <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-  <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="md:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <Menu className="h-6 w-6 text-gray-900 dark:text-white" />
-              </button>
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white ml-2">Koxixo</h1>
-            </div>
-            <div className="flex items-center space-x-2 md:space-x-4">
-              <ThemeToggle />
-              <div className="flex items-center space-x-1 md:space-x-2">
-                <User className="h-4 w-4 md:h-5 md:w-5 text-gray-600 dark:text-gray-300" />
-                <span className="text-xs md:text-sm text-gray-700 dark:text-gray-300 hidden sm:inline">{session?.user.name}</span>
-                <span className="text-xs bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 px-1 md:px-2 py-1 rounded-full">
-                  {session?.user.role}
-                </span>
-              </div>
-              <button
-                onClick={() => signOut()}
-                className="p-2 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-              >
-                <LogOut className="h-4 w-4 md:h-5 md:w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transition-transform duration-200 ease-in-out`}>
-          <nav className="mt-8 px-4 space-y-2">
-            <Link
-              href="/dashboard"
-              className="flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-            >
-              <BarChart3 className="h-5 w-5 mr-3" />
-              Dashboard
-            </Link>
-            <Link
-              href="/pedidos"
-              className="flex items-center px-4 py-2 text-gray-900 dark:text-white bg-red-50 dark:bg-red-900/30 rounded-lg"
-            >
-              <Package className="h-5 w-5 mr-3" />
-              Pedidos
-            </Link>
-            {session?.user.role === 'ADMIN' && (
-              <Link
-                href="/usuarios"
-                className="flex items-center px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                <User className="h-5 w-5 mr-3" />
-                Usuários
-              </Link>
-            )}
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 p-4 md:p-6">
+    <ResponsiveLayout title="Gerenciamento de Pedidos">
+      <div className="max-w-7xl mx-auto p-4 md:p-0">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-8 space-y-4 md:space-y-0">
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Gerenciamento de Pedidos</h2>
@@ -730,16 +666,7 @@ export default function PedidosPage() {
               </div>
             </div>
           </div>
-        </main>
       </div>
-
-      {/* Sidebar overlay for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-25 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        ></div>
-      )}
 
       {/* Modal de Detalhes */}
       {viewingOrder && (
@@ -939,6 +866,6 @@ export default function PedidosPage() {
           </div>
         </div>
       )}
-    </div>
+    </ResponsiveLayout>
   )
 }
