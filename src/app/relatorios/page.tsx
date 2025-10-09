@@ -28,6 +28,10 @@ export default function RelatoriosPage() {
   const [data, setData] = useState<SummaryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv')
+  const [exportFields, setExportFields] = useState<string[]>([
+    'id','title','status','priority','value','createdAt','createdBy'
+  ])
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -80,6 +84,8 @@ export default function RelatoriosPage() {
     if (filters.status) params.set('status', filters.status)
     if (filters.priority) params.set('priority', filters.priority)
     if (filters.createdBy) params.set('createdBy', filters.createdBy)
+    params.set('format', exportFormat)
+    params.set('fields', exportFields.join(','))
     const url = `/api/relatorios/export?${params.toString()}`
     // open in same tab to trigger download
     window.location.href = url
@@ -90,12 +96,23 @@ export default function RelatoriosPage() {
       title="Relatórios" 
       subtitle="Resumo de pedidos por período, status e prioridade"
       actions={
-        <button
-          onClick={handleExport}
-          className="inline-flex items-center bg-red-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors"
-        >
-          Exportar CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <select
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value as 'csv' | 'pdf')}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-700 dark:text-gray-100"
+            aria-label="Formato de exportação"
+          >
+            <option value="csv">CSV</option>
+            <option value="pdf">PDF</option>
+          </select>
+          <button
+            onClick={handleExport}
+            className="inline-flex items-center bg-red-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors"
+          >
+            Exportar
+          </button>
+        </div>
       }
     >
       {/* Filtros */}
@@ -152,6 +169,42 @@ export default function RelatoriosPage() {
               placeholder="Nome do usuário..."
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm dark:bg-gray-700 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400"
             />
+          </div>
+        </div>
+        {/* Campos para exportação */}
+        <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+          <h4 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">Campos para exportação</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {[
+              { key: 'id', label: 'ID' },
+              { key: 'title', label: 'Título' },
+              { key: 'description', label: 'Descrição' },
+              { key: 'status', label: 'Status' },
+              { key: 'priority', label: 'Prioridade' },
+              { key: 'value', label: 'Valor' },
+              { key: 'createdAt', label: 'Data de Criação' },
+              { key: 'dueDate', label: 'Prazo' },
+              { key: 'createdBy', label: 'Criado por' },
+              { key: 'lastEditedBy', label: 'Editado por' },
+              { key: 'approvedBy', label: 'Aprovado por' },
+              { key: 'rejectedBy', label: 'Rejeitado por' },
+              { key: 'rejectionReason', label: 'Motivo rejeição' },
+              { key: 'completedAt', label: 'Concluído em' },
+              { key: 'deliveredAt', label: 'Entregue em' },
+            ].map(({ key, label }) => {
+              const checked = exportFields.includes(key)
+              return (
+                <label key={key} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(e) => setExportFields((prev) => e.target.checked ? [...prev, key] : prev.filter((f) => f !== key))}
+                    className="rounded border-gray-300 dark:border-gray-600 text-red-600 focus:ring-red-500"
+                  />
+                  {label}
+                </label>
+              )
+            })}
           </div>
         </div>
       </div>
