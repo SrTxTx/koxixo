@@ -24,16 +24,27 @@ export async function GET() {
   try {
     const orders = await prisma.order.findMany({
       orderBy: { createdAt: 'desc' },
-      include: {
-        createdBy: true,
-        rejectedBy: true
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        priority: true,
+        value: true,
+        createdAt: true,
+        lastEditedAt: true,
+        rejectionReason: true,
+        rejectedAt: true,
+        createdBy: { select: { name: true } },
+        lastEditedBy: { select: { name: true } },
+        rejectedBy: { select: { name: true } },
       },
     })
-    
+
     return NextResponse.json(orders)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao buscar pedidos:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    return NextResponse.json({ error: 'Erro interno do servidor', message: error?.message }, { status: 500 })
   }
 }
 
