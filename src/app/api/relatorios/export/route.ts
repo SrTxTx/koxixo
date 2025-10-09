@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
     if (status) where.status = status
     if (priority) where.priority = priority
     if (createdBy) {
-      where.createdBy = { name: { contains: createdBy, mode: 'insensitive' } }
+      where.createdBy = { is: { name: { contains: createdBy, mode: 'insensitive' } } }
     }
     if (dateFrom || dateTo) {
       where.createdAt = {}
