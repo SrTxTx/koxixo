@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
       take: 100, // buscar um pouco mais para derivar eventos suficientes
       select: {
         id: true,
+        createdById: true,
         title: true,
         status: true,
         createdAt: true,
@@ -49,7 +50,9 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    const events: Notif[] = []
+  const userId = parseInt(session.user.id, 10)
+  const role = session.user.role as string
+  const events: (Notif & { createdById?: number })[] = []
 
     for (const o of orders) {
       // Criado
@@ -60,6 +63,7 @@ export async function GET(req: NextRequest) {
           type: 'CREATED',
           message: `Novo pedido #${o.id} criado por ${o.createdBy?.name || 'Usuário'}: ${o.title}`,
           at: o.createdAt.toISOString(),
+          createdById: o.createdById,
         })
       }
       // Aprovado
@@ -70,6 +74,7 @@ export async function GET(req: NextRequest) {
           type: 'APPROVED',
           message: `Pedido #${o.id} aprovado${o.approvedBy?.name ? ` por ${o.approvedBy.name}` : ''}`,
           at: o.approvedAt.toISOString(),
+          createdById: o.createdById,
         })
       }
       // Rejeitado
@@ -80,6 +85,7 @@ export async function GET(req: NextRequest) {
           type: 'REJECTED',
           message: `Pedido #${o.id} rejeitado${o.rejectedBy?.name ? ` por ${o.rejectedBy.name}` : ''}${o.rejectionReason ? `: ${o.rejectionReason}` : ''}`,
           at: o.rejectedAt.toISOString(),
+          createdById: o.createdById,
         })
       }
       // Em produção
@@ -90,6 +96,7 @@ export async function GET(req: NextRequest) {
           type: 'IN_PROGRESS',
           message: `Produção iniciada para o pedido #${o.id}`,
           at: o.updatedAt.toISOString(),
+          createdById: o.createdById,
         })
       }
       // Concluído
@@ -100,6 +107,7 @@ export async function GET(req: NextRequest) {
           type: 'COMPLETED',
           message: `Produção concluída do pedido #${o.id}${o.completedBy?.name ? ` por ${o.completedBy.name}` : ''}`,
           at: o.completedAt.toISOString(),
+          createdById: o.createdById,
         })
       }
       // Entregue
@@ -110,6 +118,7 @@ export async function GET(req: NextRequest) {
           type: 'DELIVERED',
           message: `Pedido #${o.id} entregue${o.deliveredBy?.name ? ` por ${o.deliveredBy.name}` : ''}`,
           at: o.deliveredAt.toISOString(),
+          createdById: o.createdById,
         })
       }
       // Editado
@@ -120,13 +129,30 @@ export async function GET(req: NextRequest) {
           type: 'UPDATED',
           message: `Pedido #${o.id} atualizado${o.lastEditedBy?.name ? ` por ${o.lastEditedBy.name}` : ''}`,
           at: o.lastEditedAt.toISOString(),
+          createdById: o.createdById,
         })
       }
     }
 
+    // Filtrar por papel do usuário para reduzir ruído
+    const filtered = events.filter((e) => {
+      switch (role) {
+        case 'ADMIN':
+          return true
+        case 'VENDEDOR':
+          return e.createdById === userId
+        case 'ORCAMENTO':
+          return e.type === 'CREATED' || e.type === 'APPROVED' || e.type === 'REJECTED' || e.type === 'UPDATED'
+        case 'PRODUCAO':
+          return e.type === 'APPROVED' || e.type === 'IN_PROGRESS' || e.type === 'COMPLETED'
+        default:
+          return true
+      }
+    })
+
     // Ordenar por data desc e limitar
-    events.sort((a, b) => (a.at > b.at ? -1 : a.at < b.at ? 1 : 0))
-    const items = events.slice(0, limit)
+    filtered.sort((a, b) => (a.at > b.at ? -1 : a.at < b.at ? 1 : 0))
+    const items = filtered.slice(0, limit).map(({ createdById, ...rest }) => rest)
 
     return NextResponse.json({ items })
   } catch (error) {
