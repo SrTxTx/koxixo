@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { ResponsiveLayout } from '../../../components/layout/ResponsiveLayout'
 
 export default function NovoPedidoPage() {
   const { data: session, status } = useSession()
@@ -12,7 +13,7 @@ export default function NovoPedidoPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [value, setValue] = useState('')
-  const [priority, setPriority] = useState('NORMAL')
+  const [priority, setPriority] = useState('MEDIUM')
   const [dueDate, setDueDate] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -52,102 +53,94 @@ export default function NovoPedidoPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-      </div>
+      <ResponsiveLayout title="Novo Pedido" subtitle="Carregando...">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+        </div>
+      </ResponsiveLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <ResponsiveLayout
+      title="Novo Pedido"
+      subtitle="Preencha os dados para criar um novo pedido"
+      actions={
+        <Link href="/pedidos">
+          <button className="btn-ghost inline-flex items-center">
+            <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
+          </button>
+        </Link>
+      }
+    >
       <div className="max-w-4xl mx-auto">
-        <header className="mb-8">
-          <Link href="/pedidos">
-            <button className="flex items-center text-gray-600 hover:text-gray-900 mb-4">
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Voltar para Pedidos
-            </button>
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Criar Novo Pedido</h1>
-        </header>
-
-        <div className="bg-white p-8 rounded-lg shadow-sm border">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="card">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Título do Pedido
-              </label>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Título do Pedido</label>
               <input
                 type="text"
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+                className="mt-1 input-field"
               />
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Descrição
-              </label>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Descrição</label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 required
                 rows={4}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
-              ></textarea>
+                className="mt-1 input-field"
+              />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label htmlFor="value" className="block text-sm font-medium text-gray-700">
-                  Valor (R$)
-                </label>
+                <label htmlFor="value" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Valor (R$)</label>
                 <input
                   type="number"
                   id="value"
                   value={value}
                   onChange={(e) => setValue(e.target.value)}
                   step="0.01"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+                  className="mt-1 input-field"
                 />
               </div>
 
               <div>
-                <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
-                  Prioridade
-                </label>
+                <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Prioridade</label>
                 <select
                   id="priority"
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+                  className="mt-1 input-field"
                 >
-                  <option value="NORMAL">Normal</option>
                   <option value="HIGH">Alta</option>
+                  <option value="MEDIUM">Média</option>
                   <option value="LOW">Baixa</option>
                 </select>
               </div>
 
               <div>
-                <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700">
-                  Prazo Final
-                </label>
+                <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Prazo Final</label>
                 <input
                   type="date"
                   id="dueDate"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500"
+                  className="mt-1 input-field"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <div className="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 px-4 py-3 rounded relative" role="alert">
                 <span className="block sm:inline">{error}</span>
               </div>
             )}
@@ -156,7 +149,7 @@ export default function NovoPedidoPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-red-600 text-white px-6 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors disabled:bg-red-400"
+                className="btn-primary"
               >
                 {loading ? 'Salvando...' : 'Salvar Pedido'}
               </button>
@@ -164,6 +157,6 @@ export default function NovoPedidoPage() {
           </form>
         </div>
       </div>
-    </div>
+    </ResponsiveLayout>
   )
 }
