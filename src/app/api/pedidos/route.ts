@@ -50,13 +50,21 @@ export async function POST(req: NextRequest) {
 
     console.log('Recebido para criar pedido:', body) // Log para depuração
 
-    if (!title || !description) {
+    if (!title || !description || !String(title).trim() || !String(description).trim()) {
       return NextResponse.json({ error: 'Título e descrição são obrigatórios' }, { status: 400 })
     }
 
     // Validação robusta dos campos opcionais
     const finalValue = (value !== null && value !== '' && !isNaN(parseFloat(value as string))) ? parseFloat(value as string) : null
     const finalDueDate = (dueDate && typeof dueDate === 'string' && dueDate.trim() !== '') ? new Date(dueDate) : null
+
+    // Normalizar prioridade
+    const allowedPriorities = ['HIGH', 'MEDIUM', 'LOW'] as const
+    let safePriority = typeof priority === 'string' ? priority.toUpperCase() : ''
+    if (safePriority === 'NORMAL') safePriority = 'MEDIUM'
+    if (!allowedPriorities.includes(safePriority as any)) {
+      safePriority = 'MEDIUM'
+    }
 
     const createdById = parseInt(session.user.id, 10)
     if (isNaN(createdById)) {
@@ -65,18 +73,18 @@ export async function POST(req: NextRequest) {
 
     const order = await prisma.order.create({
       data: {
-        title,
-        description,
+        title: String(title).trim(),
+        description: String(description).trim(),
         value: finalValue,
-        priority: priority || 'NORMAL',
+        priority: safePriority,
         status: 'PENDING',
         createdById: createdById,
         dueDate: finalDueDate,
       },
     })
     return NextResponse.json(order, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro detalhado ao criar pedido:', error) // Log de erro detalhado
-    return NextResponse.json({ error: 'Erro interno do servidor ao processar o pedido.' }, { status: 500 })
+    return NextResponse.json({ error: 'Erro interno do servidor ao processar o pedido.', message: error?.message }, { status: 500 })
   }
 }
