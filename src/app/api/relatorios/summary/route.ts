@@ -19,9 +19,9 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url)
-    const status = searchParams.get('status') || undefined
-    const priority = searchParams.get('priority') || undefined
-    const createdBy = searchParams.get('createdBy') || undefined
+  const status = searchParams.get('status') || undefined
+  const priority = searchParams.get('priority') || undefined
+  const createdBy = searchParams.get('createdBy') || undefined
     const startDate = parseDate(searchParams.get('startDate'))
     const endDate = parseDate(searchParams.get('endDate'))
     const range = searchParams.get('range') || undefined // today | week | month
@@ -50,7 +50,13 @@ export async function GET(req: NextRequest) {
     if (status) where.status = status
     if (priority) where.priority = priority
     if (createdBy) {
-      where.createdBy = { is: { name: { contains: createdBy, mode: 'insensitive' } } }
+      // Encontrar usuários por nome e filtrar por createdById (evita filtros relacionais complexos)
+      const users = await prisma.user.findMany({
+        where: { name: { contains: createdBy, mode: 'insensitive' } },
+        select: { id: true },
+      })
+      const ids = users.map((u) => u.id)
+      where.createdById = ids.length ? { in: ids } : -1 // -1 garante nenhum resultado quando vazio
     }
     if (dateFrom || dateTo) {
       where.createdAt = {}
@@ -125,8 +131,8 @@ export async function GET(req: NextRequest) {
       byDay,
       topCreators
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao gerar relatórios:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+    return NextResponse.json({ error: 'Erro interno do servidor', message: error?.message }, { status: 500 })
   }
 }

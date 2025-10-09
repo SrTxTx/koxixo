@@ -65,7 +65,12 @@ export async function GET(req: NextRequest) {
     if (status) where.status = status
     if (priority) where.priority = priority
     if (createdBy) {
-      where.createdBy = { is: { name: { contains: createdBy, mode: 'insensitive' } } }
+      const users = await prisma.user.findMany({
+        where: { name: { contains: createdBy, mode: 'insensitive' } },
+        select: { id: true },
+      })
+      const ids = users.map((u) => u.id)
+      where.createdById = ids.length ? { in: ids } : -1
     }
     if (dateFrom || dateTo) {
       where.createdAt = {}
@@ -191,8 +196,8 @@ export async function GET(req: NextRequest) {
         'Cache-Control': 'no-store',
       },
     })
-  } catch (error) {
-    console.error('Erro ao exportar CSV:', error)
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
+  } catch (error: any) {
+    console.error('Erro ao exportar CSV/PDF:', error)
+    return NextResponse.json({ error: 'Erro interno do servidor', message: error?.message }, { status: 500 })
   }
 }
