@@ -27,6 +27,37 @@ export function ResponsiveLayout({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
   const settingsRef = useRef<HTMLDivElement>(null)
+  const [notifications, setNotifications] = useState<Array<{ id: string; message: string; at: string; orderId: number }>>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  // Fetch notifications periodically
+  useEffect(() => {
+    let mounted = true
+    const fetchNotifs = async () => {
+      try {
+        const res = await fetch('/api/notifications?limit=20', { cache: 'no-store', credentials: 'include' })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!mounted) return
+        const items = (data?.items || []) as Array<{ id: string; message: string; at: string; orderId: number }>
+        setNotifications(items)
+        // compute unread based on last seen
+        const lastSeen = localStorage.getItem('notif:lastSeen')
+        if (lastSeen) {
+          const last = new Date(lastSeen).getTime()
+          const count = items.filter(n => new Date(n.at).getTime() > last).length
+          setUnreadCount(count)
+        } else {
+          setUnreadCount(items.length)
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    fetchNotifs()
+    const id = setInterval(fetchNotifs, 15000)
+    return () => { mounted = false; clearInterval(id) }
+  }, [])
 
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -99,11 +130,23 @@ export function ResponsiveLayout({
                 <button
                   aria-haspopup="true"
                   aria-expanded={notifOpen}
-                  onClick={(e) => { e.stopPropagation(); setNotifOpen((v) => !v); setSettingsOpen(false) }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    const nextOpen = !notifOpen
+                    setNotifOpen(nextOpen); 
+                    setSettingsOpen(false)
+                    if (!notifOpen && notifications.length > 0) {
+                      // ao abrir, marcar como visto
+                      localStorage.setItem('notif:lastSeen', new Date().toISOString())
+                      setUnreadCount(0)
+                    }
+                  }}
                   className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] leading-4 rounded-full flex items-center justify-center">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                  )}
                 </button>
                 {notifOpen && (
                   <div className="absolute right-0 mt-2 w-80 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden" role="menu" aria-label="Notificações">
@@ -112,18 +155,15 @@ export function ResponsiveLayout({
                       <p className="text-xs text-gray-500 dark:text-gray-300">Últimas atualizações do sistema</p>
                     </div>
                     <ul className="max-h-80 overflow-auto divide-y divide-gray-100 dark:divide-gray-700">
-                      <li className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                        <p className="text-sm text-gray-800 dark:text-gray-200">Pedido #123 aprovado</p>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">há 2 horas</span>
-                      </li>
-                      <li className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                        <p className="text-sm text-gray-800 dark:text-gray-200">Novo pedido criado por João</p>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">há 5 horas</span>
-                      </li>
-                      <li className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                        <p className="text-sm text-gray-800 dark:text-gray-200">Produção concluiu pedido #98</p>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">ontem</span>
-                      </li>
+                      {notifications.length === 0 && (
+                        <li className="p-3 text-sm text-gray-500 dark:text-gray-400">Sem notificações recentes</li>
+                      )}
+                      {notifications.map((n) => (
+                        <li key={n.id} className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                          <p className="text-sm text-gray-800 dark:text-gray-200">{n.message}</p>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(n.at).toLocaleString()}</span>
+                        </li>
+                      ))}
                     </ul>
                     <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900">
                       <Link href="/pedidos" className="text-sm text-red-600 dark:text-red-400 inline-flex items-center">Ver pedidos <ChevronRight className="h-4 w-4 ml-1"/></Link>
