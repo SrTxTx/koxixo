@@ -74,10 +74,29 @@ export default function RelatoriosPage() {
     )
   }
 
+  const handleExport = () => {
+    const params = new URLSearchParams()
+    if (filters.range) params.set('range', filters.range)
+    if (filters.status) params.set('status', filters.status)
+    if (filters.priority) params.set('priority', filters.priority)
+    if (filters.createdBy) params.set('createdBy', filters.createdBy)
+    const url = `/api/relatorios/export?${params.toString()}`
+    // open in same tab to trigger download
+    window.location.href = url
+  }
+
   return (
     <ResponsiveLayout 
       title="Relatórios" 
       subtitle="Resumo de pedidos por período, status e prioridade"
+      actions={
+        <button
+          onClick={handleExport}
+          className="inline-flex items-center bg-red-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors"
+        >
+          Exportar CSV
+        </button>
+      }
     >
       {/* Filtros */}
       <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
