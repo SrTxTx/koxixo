@@ -1,9 +1,10 @@
 'use client'
 
-import { ReactNode, useState } from 'react'
-import { Menu, X, Bell, Settings, User, Search, Home, ClipboardList, FileText, Users as UsersIcon } from 'lucide-react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
+import { Menu, X, Bell, Settings, User, Search, Home, ClipboardList, FileText, Users as UsersIcon, LogOut, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { ThemeToggle } from '../ui/ThemeToggle'
+import { signOut } from 'next-auth/react'
 
 interface ResponsiveLayoutProps {
   children: ReactNode
@@ -22,6 +23,30 @@ export function ResponsiveLayout({
 }: ResponsiveLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+  const settingsRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      const t = e.target as Node
+      if (notifOpen && notifRef.current && !notifRef.current.contains(t)) setNotifOpen(false)
+      if (settingsOpen && settingsRef.current && !settingsRef.current.contains(t)) setSettingsOpen(false)
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setNotifOpen(false)
+        setSettingsOpen(false)
+      }
+    }
+    document.addEventListener('click', onDocClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('click', onDocClick)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [notifOpen, settingsOpen])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -70,17 +95,75 @@ export function ResponsiveLayout({
               <ThemeToggle />
               
               {/* Notificações */}
-              <button className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  3
-                </span>
-              </button>
+              <div className="relative" ref={notifRef}>
+                <button
+                  aria-haspopup="true"
+                  aria-expanded={notifOpen}
+                  onClick={(e) => { e.stopPropagation(); setNotifOpen((v) => !v); setSettingsOpen(false) }}
+                  className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                </button>
+                {notifOpen && (
+                  <div className="absolute right-0 mt-2 w-80 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden" role="menu" aria-label="Notificações">
+                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notificações</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-300">Últimas atualizações do sistema</p>
+                    </div>
+                    <ul className="max-h-80 overflow-auto divide-y divide-gray-100 dark:divide-gray-700">
+                      <li className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                        <p className="text-sm text-gray-800 dark:text-gray-200">Pedido #123 aprovado</p>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">há 2 horas</span>
+                      </li>
+                      <li className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                        <p className="text-sm text-gray-800 dark:text-gray-200">Novo pedido criado por João</p>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">há 5 horas</span>
+                      </li>
+                      <li className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                        <p className="text-sm text-gray-800 dark:text-gray-200">Produção concluiu pedido #98</p>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">ontem</span>
+                      </li>
+                    </ul>
+                    <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900">
+                      <Link href="/pedidos" className="text-sm text-red-600 dark:text-red-400 inline-flex items-center">Ver pedidos <ChevronRight className="h-4 w-4 ml-1"/></Link>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Configurações */}
-              <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                <Settings className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-              </button>
+              <div className="relative" ref={settingsRef}>
+                <button
+                  aria-haspopup="true"
+                  aria-expanded={settingsOpen}
+                  onClick={(e) => { e.stopPropagation(); setSettingsOpen((v) => !v); setNotifOpen(false) }}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Settings className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                </button>
+                {settingsOpen && (
+                  <div className="absolute right-0 mt-2 w-56 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden" role="menu" aria-label="Configurações">
+                    <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Ações</p>
+                    </div>
+                    <div className="py-1">
+                      <Link href="/usuarios" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700" role="menuitem">Perfil/Usuários</Link>
+                      <button className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700" role="menuitem" onClick={() => alert('Configurações: em breve')}>Preferências</button>
+                    </div>
+                    <div className="border-t border-gray-200 dark:border-gray-700">
+                      <button
+                        className="w-full flex items-center justify-between px-4 py-2 text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        role="menuitem"
+                        onClick={() => signOut({ callbackUrl: '/login' })}
+                      >
+                        Sair
+                        <LogOut className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Perfil */}
               <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
