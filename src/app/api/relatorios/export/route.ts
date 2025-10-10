@@ -122,68 +122,83 @@ export async function GET(req: NextRequest) {
     const activeCols = columns.filter(c => selectedFields.includes(c.key))
 
     if (format === 'pdf') {
-      // Generate PDF with a simple branded header and a table
-  const doc = new PDFDocument({ size: 'A4', margin: 40 })
-  const chunks: any[] = []
-  doc.on('data', (chunk: any) => chunks.push(chunk))
-  doc.on('end', () => {})
-
-      // Header with simple Koxixo logo
-      const startX = 40, startY = 40
-      doc.rect(startX, startY, 24, 24).fill('#dc2626') // red square
-      doc.fillColor('#ffffff').fontSize(16).text('K', startX + 6, startY + 4)
-      doc.fillColor('#111827').fontSize(18).text('Koxixo - Relatório de Pedidos', startX + 34, startY + 2)
-      doc.moveDown()
-      doc.fillColor('#374151').fontSize(10).text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`)
-
-      // Table
-      const tableTop = 90
-  const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right
-      const colWidth = pageWidth / activeCols.length
-      let y = tableTop
-
-      doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#e5e7eb')
-      // Header row
-      doc.fontSize(10).fillColor('#111827')
-      activeCols.forEach((c, i) => {
-        doc.text(c.label, 40 + i * colWidth + 2, y, { width: colWidth - 4, continued: false })
-      })
-      y += 18
-      doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#e5e7eb')
-
-      doc.fontSize(9).fillColor('#1f2937')
-      const lineHeight = 14
-      for (const o of orders) {
-        // Calculate row height based on the tallest wrapped cell
-        let maxHeight = lineHeight
-        activeCols.forEach((c) => {
-          const text = String(c.getter(o) ?? '')
-          const options = { width: colWidth - 4 }
-          const h = doc.heightOfString(text, options)
-          if (h + 6 > maxHeight) maxHeight = h + 6
+      // Generate PDF and wait for stream to finish
+      const buffer = await new Promise<Buffer>((resolve, reject) => {
+        const doc = new PDFDocument({ size: 'A4', margin: 40 })
+        const chunks: Uint8Array[] = []
+        doc.on('data', (chunk: any) => {
+          if (chunk instanceof Uint8Array) {
+            chunks.push(chunk)
+          } else if (typeof chunk === 'string') {
+            chunks.push(new TextEncoder().encode(chunk))
+          } else {
+            try {
+              chunks.push(new Uint8Array(chunk))
+            } catch {
+              const s = String(chunk)
+              chunks.push(new TextEncoder().encode(s))
+            }
+          }
         })
-  if (y + maxHeight > doc.page.height - doc.page.margins.bottom) {
-          doc.addPage()
-          y = tableTop
-          // redraw header on new page
-          doc.fontSize(10).fillColor('#111827')
-          activeCols.forEach((c, i) => {
-            doc.text(c.label, 40 + i * colWidth + 2, y, { width: colWidth - 4 })
-          })
-          y += 18
-          doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#e5e7eb')
-          doc.fontSize(9).fillColor('#1f2937')
-        }
+        doc.on('end', () => resolve(Buffer.concat(chunks as readonly Uint8Array[])))
+        doc.on('error', reject)
+
+        // Header with simple Koxixo logo
+        const startX = 40, startY = 40
+        doc.rect(startX, startY, 24, 24).fill('#dc2626') // red square
+        doc.fillColor('#ffffff').fontSize(16).text('K', startX + 6, startY + 4)
+        doc.fillColor('#111827').fontSize(18).text('Koxixo - Relatório de Pedidos', startX + 34, startY + 2)
+        doc.moveDown()
+        doc.fillColor('#374151').fontSize(10).text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`)
+
+        // Table
+        const tableTop = 90
+        const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right
+        const colWidth = pageWidth / activeCols.length
+        let y = tableTop
+
+        doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#e5e7eb')
+        // Header row
+        doc.fontSize(10).fillColor('#111827')
         activeCols.forEach((c, i) => {
-          const text = String(c.getter(o) ?? '')
-          doc.text(text, 40 + i * colWidth + 2, y, { width: colWidth - 4 })
+          doc.text(c.label, 40 + i * colWidth + 2, y, { width: colWidth - 4, continued: false })
         })
-        y += maxHeight
-        doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#f3f4f6')
-      }
+        y += 18
+        doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#e5e7eb')
 
-      doc.end()
-  const buffer = Buffer.concat(chunks)
+        doc.fontSize(9).fillColor('#1f2937')
+        const lineHeight = 14
+        for (const o of orders) {
+          // Calculate row height based on the tallest wrapped cell
+          let maxHeight = lineHeight
+          activeCols.forEach((c) => {
+            const text = String(c.getter(o) ?? '')
+            const options = { width: colWidth - 4 }
+            const h = doc.heightOfString(text, options)
+            if (h + 6 > maxHeight) maxHeight = h + 6
+          })
+          if (y + maxHeight > doc.page.height - doc.page.margins.bottom) {
+            doc.addPage()
+            y = tableTop
+            // redraw header on new page
+            doc.fontSize(10).fillColor('#111827')
+            activeCols.forEach((c, i) => {
+              doc.text(c.label, 40 + i * colWidth + 2, y, { width: colWidth - 4 })
+            })
+            y += 18
+            doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#e5e7eb')
+            doc.fontSize(9).fillColor('#1f2937')
+          }
+          activeCols.forEach((c, i) => {
+            const text = String(c.getter(o) ?? '')
+            doc.text(text, 40 + i * colWidth + 2, y, { width: colWidth - 4 })
+          })
+          y += maxHeight
+          doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#f3f4f6')
+        }
+
+        doc.end()
+      })
       const filename = `relatorio-pedidos-${new Date().toISOString().slice(0,10)}.pdf`
       return new NextResponse(buffer as any, {
         headers: {
