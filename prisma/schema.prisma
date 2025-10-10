@@ -13,12 +13,29 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum OrderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+  DELIVERED
+  CANCELLED
+}
+
+enum OrderPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   name      String
   password  String
   role      String   // ADMIN, VENDEDOR, ORCAMENTO, PRODUCAO
+  preferences Json?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -34,6 +51,10 @@ model User {
   // Relacionamento - pedidos editados
   lastEditedOrders Order[] @relation("LastEditedBy")
 
+  // Relacionamentos - anexos e auditoria
+  attachments Attachment[]
+  auditLogs   AuditLog[]
+
   @@map("users")
 }
 
@@ -42,8 +63,8 @@ model Order {
   title       String
   description String?
   value       Float?
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED, IN_PROGRESS, COMPLETED, DELIVERED, CANCELLED
-  priority    String   @default("MEDIUM")  // HIGH, MEDIUM, LOW
+  status      OrderStatus   @default(PENDING)
+  priority    OrderPriority @default(MEDIUM)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   dueDate     DateTime? @map("due_date")
@@ -78,6 +99,9 @@ model Order {
   lastEditedBy   User? @relation("LastEditedBy", fields: [lastEditedById], references: [id])
   lastEditedAt   DateTime? @map("last_edited_at")
 
+  // Anexos
+  attachments Attachment[]
+
   @@map("orders")
   @@index([status])
   @@index([priority])
@@ -85,4 +109,39 @@ model Order {
   @@index([createdById])
   @@index([status, createdAt])
   @@index([createdById, createdAt])
+}
+
+model Attachment {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now()) @map("created_at")
+  orderId     Int      @map("order_id")
+  order       Order    @relation(fields: [orderId], references: [id])
+  url         String
+  key         String
+  filename    String
+  contentType String   @map("content_type")
+  size        Int
+  createdById Int?     @map("created_by_id")
+  createdBy   User?    @relation(fields: [createdById], references: [id])
+
+  @@index([orderId])
+  @@index([createdAt])
+  @@map("attachments")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now()) @map("created_at")
+  userId     Int?     @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String
+  entity     String
+  entityId   Int      @map("entity_id")
+  from       String?
+  to         String?
+  meta       Json?
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

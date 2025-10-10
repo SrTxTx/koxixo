@@ -7,6 +7,10 @@
     "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
+    "test:integration": "vitest run --config vitest.config.ts",
+    "e2e:server": "node tests/e2e/setup-server.js",
+    "test:e2e": "playwright test",
+    "test": "npm run test:integration",
     "vercel-build": "node build-vercel.js",
     "postinstall": "prisma generate",
     "clean": "rd /s /q .next node_modules 2>nul && del package-lock.json 2>nul && npm cache clean --force && npm install && npx prisma generate",
@@ -17,6 +21,8 @@
   "dependencies": {
     "@prisma/client": "5.22.0",
     "@types/pdfkit": "^0.17.3",
+    "@upstash/ratelimit": "^2.0.6",
+    "@upstash/redis": "^1.35.5",
     "autoprefixer": "10.4.16",
     "bcryptjs": "^2.4.3",
     "lucide-react": "0.292.0",
@@ -34,14 +40,18 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "20.11.30",
     "@types/react": "18.2.0",
     "@types/react-dom": "18.2.0",
+    "@types/supertest": "^2.0.16",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.3",
     "prisma": "5.22.0",
-    "tsx": "^4.20.6"
+    "supertest": "^7.0.0",
+    "tsx": "^4.20.6",
+    "vitest": "^2.1.1"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

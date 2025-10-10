@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import PDFDocument from 'pdfkit'
 import { z } from 'zod'
 import { apiError, withTimeout } from '@/lib/api'
+import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -25,7 +25,7 @@ function csvEscape(value: any): string {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session = await getSession(req)
   if (!session) {
     return apiError(401, 'Não autorizado')
   }
@@ -209,23 +209,63 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    // CSV default
-    const header = activeCols.map(c => c.label)
-    const rows = orders.map((o) => activeCols.map((c) => c.getter(o)))
-    let csv = '\uFEFF' + header.map(csvEscape).join(';') + '\n'
-    for (const r of rows) {
-      csv += r.map(csvEscape).join(';') + '\n'
-    }
+    // CSV streaming
+    const maxRows = Math.max(1, Math.min(5000, parseInt((searchParams.get('max') || '5000'), 10)))
     const filename = `relatorio-pedidos-${new Date().toISOString().slice(0,10)}.csv`
-    return new NextResponse(csv, {
+
+    const stream = new ReadableStream<Uint8Array>({
+      start: async (controller) => {
+        const encoder = new TextEncoder()
+        // BOM + header
+        const header = activeCols.map(c => c.label).map(csvEscape).join(';') + '\n'
+        controller.enqueue(encoder.encode('\uFEFF' + header))
+
+        // Paginate to avoid loading all rows
+        let lastId: number | undefined = undefined
+        let sent = 0
+        const pageSize = 500
+
+        try {
+          while (sent < maxRows) {
+            const batch = await prisma.order.findMany({
+              where,
+              orderBy: { id: 'asc' },
+              take: Math.min(pageSize, maxRows - sent),
+              ...(lastId ? { cursor: { id: lastId }, skip: 1 } : {}),
+              include: {
+                createdBy: { select: { name: true } },
+                lastEditedBy: { select: { name: true } },
+                approvedBy: { select: { name: true } },
+                rejectedBy: { select: { name: true } },
+              },
+            })
+            if (batch.length === 0) break
+            for (const o of batch) {
+              const row = activeCols.map(c => csvEscape(c.getter(o))).join(';') + '\n'
+              controller.enqueue(encoder.encode(row))
+              sent++
+              if (sent >= maxRows) break
+            }
+            lastId = batch[batch.length - 1].id
+          }
+        } catch (err) {
+          // Emit nothing further; close stream
+        } finally {
+          controller.close()
+        }
+      },
+    })
+
+    return new NextResponse(stream as any, {
       headers: {
         'Content-Type': 'text/csv; charset=utf-8',
         'Content-Disposition': `attachment; filename="${filename}"`,
         'Cache-Control': 'no-store',
+        'X-Row-Limit': String(maxRows),
       },
     })
   } catch (error: any) {
-    console.error('Erro ao exportar CSV/PDF:', error)
+    logger.error('Erro ao exportar CSV/PDF:', error)
     if (String(error?.message || '').toLowerCase().includes('tempo limite')) {
       return apiError(504, 'Serviço indisponível', { message: 'Tempo limite ao exportar relatório' })
     }

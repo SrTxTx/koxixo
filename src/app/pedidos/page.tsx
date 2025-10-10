@@ -3,10 +3,12 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { loadServerPreferences, saveServerPreferences } from '@/lib/preferences'
 import useSWR from 'swr'
 import { PlusCircle, Package, Filter, Search, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
+import { useToast } from '@/components/ui/Toast'
 
 interface Order {
   id: number
@@ -27,6 +29,7 @@ interface Order {
 export default function PedidosPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const toast = useToast()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -47,6 +50,7 @@ export default function PedidosPage() {
     createdBy: '',
     searchIn: 'title' // 'title', 'description', 'both'
   })
+  const [visibleCols, setVisibleCols] = useState<string[]>(['title','status','priority','createdBy','createdAt'])
 
   // Aplicar preferências salvas (pageSize, status/priority padrão)
   useEffect(() => {
@@ -60,6 +64,14 @@ export default function PedidosPage() {
         if (typeof prefs?.orders?.defaultPriority === 'string') setFilters(f => ({ ...f, priority: prefs.orders.defaultPriority }))
       }
     } catch {}
+    ;(async () => {
+      try {
+        const server = await loadServerPreferences()
+        const o = server?.orders || {}
+        if (o.filters) setFilters((f) => ({ ...f, ...o.filters }))
+        if (Array.isArray(o.visibleCols)) setVisibleCols(o.visibleCols)
+      } catch {}
+    })()
   }, [])
   
   const [editForm, setEditForm] = useState({
@@ -109,6 +121,13 @@ export default function PedidosPage() {
     }
   }, [data])
 
+  // Persistir filtros/colunas no servidor (e local) quando mudarem
+  useEffect(() => {
+    const prefs = { orders: { filters, visibleCols } }
+    try { localStorage.setItem('koxixo:prefs:orders', JSON.stringify(prefs.orders)) } catch {}
+    saveServerPreferences(prefs)
+  }, [filters, visibleCols])
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login')
@@ -137,12 +156,12 @@ export default function PedidosPage() {
         if (response.status === 401) {
           router.push('/login')
         } else {
-          alert(data.error || 'Erro ao processar ação')
+          toast.error(data.error || 'Erro ao processar ação', 'Ação nos pedidos')
         }
       }
     } catch (error) {
       console.error('Erro ao processar ação:', error)
-      alert('Erro de rede')
+      toast.error('Erro de rede', 'Ação nos pedidos')
     }
   }
 
@@ -187,12 +206,12 @@ export default function PedidosPage() {
         if (response.status === 401) {
           router.push('/login')
         } else {
-          alert(data.error || 'Erro ao editar pedido')
+          toast.error(data.error || 'Erro ao editar pedido', 'Edição de pedido')
         }
       }
     } catch (error) {
       console.error('Erro ao editar pedido:', error)
-      alert('Erro de rede')
+      toast.error('Erro de rede', 'Edição de pedido')
     }
   }
 
@@ -632,12 +651,12 @@ export default function PedidosPage() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Título</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Prioridade</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Criado por</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Editado por</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none" onClick={() => { setSortBy('title' as any); setSortDir(d => d === 'asc' ? 'desc' : 'asc') }}>Título {sortBy==='title' ? (sortDir==='asc' ? '▲' : '▼') : ''}</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none" onClick={() => { setSortBy('status'); setSortDir(d => d === 'asc' ? 'desc' : 'asc') }}>Status {sortBy==='status' ? (sortDir==='asc' ? '▲' : '▼') : ''}</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none" onClick={() => { setSortBy('priority'); setSortDir(d => d === 'asc' ? 'desc' : 'asc') }}>Prioridade {sortBy==='priority' ? (sortDir==='asc' ? '▲' : '▼') : ''}</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none" onClick={() => { setSortBy('createdBy' as any); setSortDir(d => d === 'asc' ? 'desc' : 'asc') }}>Criado por</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none" onClick={() => { setSortBy('updatedAt'); setSortDir(d => d === 'asc' ? 'desc' : 'asc') }}>Editado por</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none" onClick={() => { setSortBy('createdAt'); setSortDir(d => d === 'asc' ? 'desc' : 'asc') }}>Data {sortBy==='createdAt' ? (sortDir==='asc' ? '▲' : '▼') : ''}</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-72">Ações</th>
                     </tr>
                   </thead>
@@ -670,24 +689,34 @@ export default function PedidosPage() {
                     ) : (
                       filteredOrders.map(order => (
                         <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{order.title}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(order.status)}`}>
-                              {getStatusText(order.status)}
-                            </span>
-                          </td>
-                          <td className={`px-6 py-4 whitespace-nowrap text-sm ${getPriorityClass(order.priority)}`}>
-                            {getPriorityText(order.priority)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{order.createdBy.name}</td>
+                          {visibleCols.includes('title') && (
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{order.title}</div>
+                            </td>
+                          )}
+                          {visibleCols.includes('status') && (
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(order.status)}`}>
+                                {getStatusText(order.status)}
+                              </span>
+                            </td>
+                          )}
+                          {visibleCols.includes('priority') && (
+                            <td className={`px-6 py-4 whitespace-nowrap text-sm ${getPriorityClass(order.priority)}`}>
+                              {getPriorityText(order.priority)}
+                            </td>
+                          )}
+                          {visibleCols.includes('createdBy') && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{order.createdBy.name}</td>
+                          )}
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                             {order.lastEditedBy ? order.lastEditedBy.name : '-'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </td>
+                          {visibleCols.includes('createdAt') && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                              {new Date(order.createdAt).toLocaleDateString()}
+                            </td>
+                          )}
                           <td className="px-6 py-6 text-sm">
                             <div className="flex flex-wrap gap-2 min-w-max">
                               {getActionButtons(order)}
@@ -698,6 +727,22 @@ export default function PedidosPage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Paginação e PageSize */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <span>Itens por página:</span>
+                  <select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }} className="border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600">
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="px-3 py-1 border rounded disabled:opacity-50 dark:bg-gray-700 dark:border-gray-600" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page<=1}>Anterior</button>
+                  <span className="text-sm">Página {page}</span>
+                  <button className="px-3 py-1 border rounded dark:bg-gray-700 dark:border-gray-600" onClick={() => setPage(p => p+1)}>Próxima</button>
+                </div>
               </div>
             </div>
           </div>
@@ -821,6 +866,20 @@ export default function PedidosPage() {
               )}
             </div>
           </div>
+                  {/* Colunas visíveis */}
+                  <div className="mt-3">
+                    <details>
+                      <summary className="cursor-pointer text-sm text-gray-700 dark:text-gray-300">Colunas visíveis</summary>
+                      <div className="mt-2 flex flex-wrap gap-3 text-sm">
+                        {[{k:'title',l:'Título'},{k:'status',l:'Status'},{k:'priority',l:'Prioridade'},{k:'createdBy',l:'Criado por'},{k:'createdAt',l:'Criado em'},{k:'description',l:'Descrição'}].map(c => (
+                          <label key={c.k} className="flex items-center gap-2">
+                            <input type="checkbox" checked={visibleCols.includes(c.k)} onChange={e => setVisibleCols(v => e.target.checked ? Array.from(new Set([...v, c.k])) : v.filter(x => x !== c.k))} />
+                            {c.l}
+                          </label>
+                        ))}
+                      </div>
+                    </details>
+                  </div>
         </div>
       )}
 

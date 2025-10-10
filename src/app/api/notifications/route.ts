@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { apiError, withTimeout } from '@/lib/api'
+import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +16,7 @@ type Notif = {
 
 // GET /api/notifications?limit=20
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session = await getSession(req)
   if (!session) {
     return apiError(401, 'Não autorizado')
   }
@@ -164,7 +164,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ items })
   } catch (error: any) {
-    console.error('Erro ao listar notificações:', error)
+    logger.error('Erro ao listar notificações:', error)
     if (String(error?.message || '').toLowerCase().includes('tempo limite')) {
       return apiError(504, 'Serviço indisponível', { message: 'Tempo limite ao carregar notificações' })
     }

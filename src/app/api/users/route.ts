@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { logger } from '@/lib/logger'
+import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { executeWithRetry } from '@/lib/db-config'
 import bcrypt from 'bcryptjs'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
     
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
@@ -28,14 +28,14 @@ export async function GET() {
 
     return NextResponse.json(users)
   } catch (error) {
-    console.error('Erro ao buscar usuários:', error)
+    logger.error('Erro ao buscar usuários:', error)
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getSession(request)
     
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 })
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(user, { status: 201 })
   } catch (error) {
-    console.error('Erro ao criar usuário:', error)
+    logger.error('Erro ao criar usuário:', error)
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
   }
 }

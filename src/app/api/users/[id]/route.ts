@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -80,7 +81,7 @@ export async function PUT(
 
     return NextResponse.json(user)
   } catch (error) {
-    console.error('Erro ao atualizar usuário:', error)
+    logger.error('Erro ao atualizar usuário:', error)
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
   }
 }
@@ -119,7 +120,7 @@ export async function DELETE(
 
     // Se o usuário tem pedidos, transferir a propriedade para o admin atual
     if (userOrders.length > 0) {
-      console.log(`Transferindo ${userOrders.length} pedidos do usuário ${existingUser.name} para o admin ${session.user.name}`)
+    logger.info(`Transferindo ${userOrders.length} pedidos do usuário ${existingUser.name} para o admin ${session.user.name}`)
       
       // Atualizar pedidos criados pelo usuário
       await prisma.order.updateMany({
@@ -139,7 +140,7 @@ export async function DELETE(
 
     return NextResponse.json({ message })
   } catch (error) {
-    console.error('Erro ao excluir usuário:', error)
+    logger.error('Erro ao excluir usuário:', error)
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
   }
 }

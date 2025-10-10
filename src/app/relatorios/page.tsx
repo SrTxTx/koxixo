@@ -19,6 +19,7 @@ export default function RelatoriosPage() {
   const { status } = useSession()
   const router = useRouter()
 
+  const [rowLimit, setRowLimit] = useState(5000)
   const [filters, setFilters] = useState({
     range: 'month', // today | week | month
     status: '',
@@ -81,7 +82,8 @@ export default function RelatoriosPage() {
       }
     }
     fetchData()
-    return () => { ignore = true }
+    const id = setInterval(() => { if (!ignore) fetchData() }, 60000)
+    return () => { ignore = true; clearInterval(id) }
   }, [queryString])
 
   if (status === 'loading') {
@@ -95,6 +97,9 @@ export default function RelatoriosPage() {
   }
 
   const handleExport = () => {
+    if (rowLimit > 5000) {
+      setRowLimit(5000)
+    }
     const params = new URLSearchParams()
     if (filters.range) params.set('range', filters.range)
     if (filters.status) params.set('status', filters.status)
@@ -102,6 +107,7 @@ export default function RelatoriosPage() {
     if (filters.createdBy) params.set('createdBy', filters.createdBy)
     params.set('format', exportFormat)
     params.set('fields', exportFields.join(','))
+    params.set('max', String(rowLimit))
     const url = `/api/relatorios/export?${params.toString()}`
     // open in same tab to trigger download
     window.location.href = url
@@ -185,6 +191,14 @@ export default function RelatoriosPage() {
               placeholder="Nome do usuário..."
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm dark:bg-gray-700 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400"
             />
+          </div>
+        </div>
+        <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
+          <div className="flex items-center gap-2">
+            <span>Limite de linhas para exportação:</span>
+            <input type="number" min={1} max={5000} className="w-24 border rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600"
+              value={rowLimit} onChange={(e) => setRowLimit(Math.max(1, Math.min(5000, Number(e.target.value) || 1)))} />
+            <span>(máx. 5000)</span>
           </div>
         </div>
         {/* Campos para exportação */}

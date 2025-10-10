@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 
 // Avoid static rendering during build; this route uses headers/session
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+  const session = await getSession()
     
     return NextResponse.json({
       hasSession: !!session,

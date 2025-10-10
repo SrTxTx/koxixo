@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger'
 // Configurações específicas para PostgreSQL em produção
 export const dbConfig = {
   // Configurações para resolver problemas de prepared statements em Vercel
@@ -24,13 +25,13 @@ export const handlePrismaError = (error: any) => {
       error.message?.includes('prepared statement') ||
       error.message?.includes('already exists') ||
       error.kind?.QueryError?.PostgresError?.code === '42P05') {
-    console.log('🔄 Prepared statement error detected, retrying with new client...')
+  logger.warn('🔄 Prepared statement error detected, retrying with new client...')
     return { retry: true, delay: 200, createNewClient: true }
   }
   
   // Outros erros de conexão
   if (error.code?.startsWith('P') || error.code?.startsWith('42')) {
-    console.log('🚨 Prisma connection error:', error.code, error.message)
+  logger.error('🚨 Prisma connection error:', error.code, error.message)
     return { retry: true, delay: 200 }
   }
   
@@ -55,17 +56,17 @@ export const executeWithRetry = async <T>(
       const errorInfo = handlePrismaError(error)
       
       if (!errorInfo.retry || attempt === maxRetries) {
-        console.log(`❌ Final error after ${attempt} attempts:`, error.message)
+  logger.error(`❌ Final error after ${attempt} attempts:`, error.message)
         throw error
       }
       
       const delay = errorInfo.delay * attempt
-      console.log(`🔄 Tentativa ${attempt}/${maxRetries} falhou, tentando novamente em ${delay}ms...`)
-      console.log(`🔍 Erro: ${error.message}`)
+  logger.warn(`🔄 Tentativa ${attempt}/${maxRetries} falhou, tentando novamente em ${delay}ms...`)
+  logger.warn(`🔍 Erro: ${error.message}`)
       
       // Se erro de prepared statement e temos função para criar novo cliente
       if (errorInfo.createNewClient && createNewClientFn) {
-        console.log('🔄 Criando novo cliente Prisma...')
+  logger.info('🔄 Criando novo cliente Prisma...')
         // A operação deve usar o novo cliente criado
       }
       

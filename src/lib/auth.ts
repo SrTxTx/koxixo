@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { createAuthPrismaClient } from './prisma'
 import { executeWithRetry } from './db-config'
+import { logger } from '@/lib/logger'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,7 +19,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          console.log('🔍 Tentativa de login para:', credentials.email)
+          logger.info('🔍 Tentativa de login para:', credentials.email)
           
           let authPrisma = createAuthPrismaClient()
           let user = null
@@ -36,13 +37,13 @@ export const authOptions: NextAuthOptions = {
               try {
                 authPrisma.$disconnect()
               } catch (e) {
-                console.log('⚠️ Error disconnecting old client:', e)
+                logger.warn('⚠️ Error disconnecting old client:', e)
               }
               authPrisma = createAuthPrismaClient()
               return authPrisma
             })
 
-          console.log('👤 User found:', user ? {
+          logger.debug('👤 User found:', user ? {
             id: user.id,
             email: user.email,
             name: user.name,
@@ -52,12 +53,12 @@ export const authOptions: NextAuthOptions = {
           } : 'User not found')
 
           if (!user) {
-            console.log('❌ User not found for email:', credentials.email)
+            logger.info('❌ User not found for email:', credentials.email)
             return null
           }
 
           if (process.env.NODE_ENV === 'development') {
-            console.log('🔐 Validando credenciais (detalhes sensíveis ocultos em produção)')
+            logger.debug('🔐 Validando credenciais (detalhes sensíveis ocultos em produção)')
           }
 
           const isPasswordValid = await bcrypt.compare(
@@ -65,15 +66,15 @@ export const authOptions: NextAuthOptions = {
             user.password
           )
           if (process.env.NODE_ENV === 'development') {
-            console.log('✅ Senha válida?', isPasswordValid)
+            logger.debug('✅ Senha válida?', isPasswordValid)
           }
 
           if (!isPasswordValid) {
-            console.log('❌ Invalid password for user:', credentials.email)
+            logger.info('❌ Invalid password for user:', credentials.email)
             return null
           }
 
-          console.log('🎉 Login successful for:', credentials.email)
+          logger.info('🎉 Login successful for:', credentials.email)
           return {
             id: user.id.toString(),
             email: user.email,
@@ -82,19 +83,19 @@ export const authOptions: NextAuthOptions = {
           }
           
           } catch (error) {
-            console.error('💥 Erro durante autenticação:', error)
+            logger.error('💥 Erro durante autenticação:', error)
             return null
           } finally {
             // Garantir desconexão do cliente específico de autenticação
             try {
               await authPrisma.$disconnect()
-              console.log('🔌 Cliente auth desconectado com sucesso')
+              logger.debug('🔌 Cliente auth desconectado com sucesso')
             } catch (disconnectError) {
-              console.log('⚠️ Erro ao desconectar cliente auth:', disconnectError)
+              logger.warn('⚠️ Erro ao desconectar cliente auth:', disconnectError)
             }
           }
         } catch (error) {
-          console.error('💥 Erro geral durante autenticação:', error)
+          logger.error('💥 Erro geral durante autenticação:', error)
           return null
         }
       }
@@ -102,6 +103,18 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt'
+  },
+  // Ensure cookies work over http in dev/test
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
   callbacks: {
     async jwt({ token, user }) {

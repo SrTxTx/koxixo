@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { logger } from '@/lib/logger'
 import { getDatabaseUrl, getProductionConfig } from './database-url'
 
 const globalForPrisma = globalThis as unknown as {
@@ -9,7 +10,7 @@ const globalForPrisma = globalThis as unknown as {
 const createPrismaClient = () => {
   // Garantir que a URL sempre tenha prepared_statements=false
   const databaseUrl = getDatabaseUrl()
-  console.log('🔧 Database URL configurada:', databaseUrl.replace(/:[^:]*@/, ':***@'))
+  logger.info('🔧 Database URL configurada:', databaseUrl.replace(/:[^:]*@/, ':***@'))
   
   const config = {
     ...getProductionConfig(),
@@ -20,7 +21,7 @@ const createPrismaClient = () => {
     },
   }
   
-  console.log('🔧 Criando cliente Prisma com configurações otimizadas')
+  logger.info('🔧 Criando cliente Prisma com configurações otimizadas')
   
   return new PrismaClient(config)
 }
@@ -71,7 +72,7 @@ export const createAuthPrismaClient = () => {
       try {
         await client.$disconnect()
       } catch (error) {
-        console.log('⚠️ Auto-disconnect error:', error)
+  logger.warn('⚠️ Auto-disconnect error:', error)
       }
     }, 10000) // 10 segundos
   }
@@ -83,8 +84,8 @@ export const createAuthPrismaClient = () => {
 export const disconnectPrisma = async () => {
   try {
     await prisma.$disconnect()
-    console.log('✅ Prisma desconectado com sucesso')
+  logger.info('✅ Prisma desconectado com sucesso')
   } catch (error) {
-    console.log('⚠️ Erro ao desconectar Prisma:', error)
+  logger.warn('⚠️ Erro ao desconectar Prisma:', error)
   }
 }

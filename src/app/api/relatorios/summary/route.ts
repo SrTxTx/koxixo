@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { apiError, withTimeout } from '@/lib/api'
+import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -145,7 +146,7 @@ export async function GET(req: NextRequest) {
       topCreators
     })
   } catch (error: any) {
-    console.error('Erro ao gerar relatórios:', error)
+    logger.error('Erro ao gerar relatórios:', error)
     if (String(error?.message || '').toLowerCase().includes('tempo limite')) {
       return apiError(504, 'Serviço indisponível', { message: 'Tempo limite ao gerar relatórios' })
     }

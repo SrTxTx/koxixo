@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { apiError, withTimeout } from '@/lib/api'
+import { logger } from '@/lib/logger'
+import { auditLog } from '@/lib/audit'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
 
 // GET: Listar todos os pedidos
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session = await getSession(req)
   if (!session) return apiError(401, 'Não autorizado')
 
   try {
@@ -124,7 +125,7 @@ export async function GET(req: NextRequest) {
     }
     return res
   } catch (error: any) {
-    console.error('Erro ao buscar pedidos:', error)
+  logger.error('Erro ao buscar pedidos:', error)
     if (String(error?.message || '').toLowerCase().includes('tempo limite')) {
       return apiError(504, 'Serviço indisponível', { message: 'Tempo limite ao consultar pedidos. Tente novamente.' })
     }
@@ -134,7 +135,7 @@ export async function GET(req: NextRequest) {
 
 // POST: Criar um novo pedido
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session = await getSession(req)
   if (!session || !['ADMIN', 'VENDEDOR', 'ORCAMENTO'].includes(session.user.role)) {
     return apiError(403, 'Acesso negado')
   }
@@ -152,7 +153,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) return apiError(400, 'Entrada inválida', { message: parsed.error.message })
     const { title, description, value, priority, dueDate } = parsed.data
 
-    console.log('Recebido para criar pedido:', body) // Log para depuração
+  logger.debug('Recebido para criar pedido:', body)
 
     if (!title || !description || !String(title).trim() || !String(description).trim()) {
       return NextResponse.json({ error: 'Título e descrição são obrigatórios' }, { status: 400 })
@@ -180,15 +181,23 @@ export async function POST(req: NextRequest) {
         title: String(title).trim(),
         description: String(description).trim(),
         value: finalValue,
-        priority: safePriority,
-        status: 'PENDING',
+  priority: safePriority as any,
+  status: 'PENDING' as any,
         createdById: createdById,
         dueDate: finalDueDate,
       },
     }), 8000)
+    // Auditoria
+    await auditLog({
+      userId: createdById,
+      action: 'ORDER_CREATE',
+      entity: 'Order',
+      entityId: order.id,
+      to: { title: order.title, priority: order.priority, status: order.status, value: order.value },
+    })
     return NextResponse.json(order, { status: 201 })
   } catch (error: any) {
-    console.error('Erro detalhado ao criar pedido:', error)
+  logger.error('Erro detalhado ao criar pedido:', error)
     if (String(error?.message || '').toLowerCase().includes('tempo limite')) {
       return apiError(504, 'Serviço indisponível', { message: 'Tempo limite ao criar pedido. Tente novamente.' })
     }

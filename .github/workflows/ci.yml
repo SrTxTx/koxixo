@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: koxixo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set .env
+        run: |
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/koxixo?schema=public&pgbouncer=false&connection_limit=1&pool_timeout=30&sslmode=disable&prepared_statements=false" >> .env
+          echo "DIRECT_URL=postgresql://postgres:postgres@localhost:5432/koxixo?schema=public" >> .env
+          echo "NEXTAUTH_SECRET=testsecret" >> .env
+          echo "NEXTAUTH_URL=http://localhost:3001" >> .env
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Push schema (reset for CI)
+        run: npx prisma db push --force-reset
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run integration tests (Vitest)
+        run: npx vitest run --reporter=verbose
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run E2E (Playwright)
+        run: npx playwright test

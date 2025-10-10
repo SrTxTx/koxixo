@@ -31,6 +31,8 @@ export function ResponsiveLayout({
   const settingsRef = useRef<HTMLDivElement>(null)
   const [notifications, setNotifications] = useState<Array<{ id: string; message: string; at: string; orderId: number }>>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const notifIndexRef = useRef(0)
+  const settingsIndexRef = useRef(0)
 
   // Fetch notifications periodically
   useEffect(() => {
@@ -160,7 +162,15 @@ export function ResponsiveLayout({
                   )}
                 </button>
                 {notifOpen && (
-                  <div className="absolute right-0 mt-2 w-80 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden" role="menu" aria-label="Notificações">
+                  <div className="absolute right-0 mt-2 w-80 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden" role="menu" aria-label="Notificações"
+                    onKeyDown={(e) => {
+                      const max = notifications.length - 1
+                      if (['ArrowDown','ArrowUp'].includes(e.key)) e.preventDefault()
+                      if (e.key === 'ArrowDown') notifIndexRef.current = Math.min(max, notifIndexRef.current + 1)
+                      if (e.key === 'ArrowUp') notifIndexRef.current = Math.max(0, notifIndexRef.current - 1)
+                      if (e.key === 'Escape') setNotifOpen(false)
+                    }}
+                  >
                     <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notificações</h3>
                       <p className="text-xs text-gray-500 dark:text-gray-300">Últimas atualizações do sistema</p>
@@ -169,8 +179,9 @@ export function ResponsiveLayout({
                       {notifications.length === 0 && (
                         <li className="p-3 text-sm text-gray-500 dark:text-gray-400">Sem notificações recentes</li>
                       )}
-                      {notifications.map((n) => (
-                        <li key={n.id} className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                      {notifications.map((n, i) => (
+                        <li key={n.id} role="menuitem" tabIndex={i === notifIndexRef.current ? 0 : -1}
+                            className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700">
                           <p className="text-sm text-gray-800 dark:text-gray-200">{n.message}</p>
                           <span className="text-xs text-gray-500 dark:text-gray-400">{new Date(n.at).toLocaleString()}</span>
                         </li>
@@ -194,18 +205,30 @@ export function ResponsiveLayout({
                   <Settings className="h-5 w-5 text-gray-600 dark:text-gray-300" />
                 </button>
                 {settingsOpen && (
-                  <div className="absolute right-0 mt-2 w-56 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden" role="menu" aria-label="Configurações">
+                  <div className="absolute right-0 mt-2 w-56 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden" role="menu" aria-label="Configurações"
+                    onKeyDown={(e) => {
+                      const items = Array.from(e.currentTarget.querySelectorAll('[role="menuitem"]')) as HTMLElement[]
+                      const max = items.length - 1
+                      const current = settingsIndexRef.current
+                      if (['ArrowDown','ArrowUp'].includes(e.key)) e.preventDefault()
+                      if (e.key === 'ArrowDown') settingsIndexRef.current = Math.min(max, current + 1)
+                      if (e.key === 'ArrowUp') settingsIndexRef.current = Math.max(0, current - 1)
+                      if (e.key === 'Escape') setSettingsOpen(false)
+                      items[settingsIndexRef.current]?.focus()
+                    }}
+                  >
                     <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Ações</p>
                     </div>
                     <div className="py-1">
-                      <Link href="/usuarios" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700" role="menuitem">Perfil/Usuários</Link>
-                      <Link href="/preferencias" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700" role="menuitem">Preferências</Link>
+                      <Link href="/usuarios" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700" role="menuitem" tabIndex={0}>Perfil/Usuários</Link>
+                      <Link href="/preferencias" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700" role="menuitem" tabIndex={-1}>Preferências</Link>
                     </div>
                     <div className="border-t border-gray-200 dark:border-gray-700">
                       <button
                         className="w-full flex items-center justify-between px-4 py-2 text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                         role="menuitem"
+                        tabIndex={-1}
                         onClick={() => signOut({ callbackUrl: '/login' })}
                       >
                         Sair

@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { apiError, withTimeout, can } from '@/lib/api'
+import { logger } from '@/lib/logger'
+import { auditLog } from '@/lib/audit'
 
 export const dynamic = 'force-dynamic'
 
 // PUT: Editar pedido
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions)
+  const session = await getSession(req)
   if (!session) {
     return apiError(401, 'Não autorizado')
   }
@@ -75,6 +76,16 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       }
     }), 8000)
 
+    // Auditoria
+    await auditLog({
+      userId: parseInt(session.user.id, 10),
+      action: 'ORDER_UPDATE',
+      entity: 'Order',
+      entityId: updatedOrder.id,
+      from: { title: existingOrder.title, description: existingOrder.description, priority: existingOrder.priority, value: existingOrder.value },
+      to: { title: updatedOrder.title, description: updatedOrder.description, priority: updatedOrder.priority, value: updatedOrder.value },
+    })
+
     return NextResponse.json({
       success: true,
       order: updatedOrder,
@@ -82,7 +93,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     })
 
   } catch (error: any) {
-    console.error('Erro ao editar pedido:', error)
+    logger.error('Erro ao editar pedido:', error)
     if (String(error?.message || '').toLowerCase().includes('tempo limite')) {
       return apiError(504, 'Serviço indisponível', { message: 'Tempo limite ao editar pedido. Tente novamente.' })
     }
@@ -92,7 +103,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
 // PATCH: Atualizar status do pedido
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions)
+  const session = await getSession(req)
   if (!session) {
     return apiError(401, 'Não autorizado')
   }
@@ -114,7 +125,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     if (isNaN(orderId) || isNaN(userId)) return apiError(400, 'ID inválido')
 
-    let updateData: any = {}
+  let updateData: any = {}
 
     switch (action) {
       case 'approve':
@@ -182,15 +193,28 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         return apiError(400, 'Ação inválida')
     }
 
+    // Buscar estado anterior para auditoria
+    const before = await withTimeout(prisma.order.findUnique({ where: { id: orderId }, select: { status: true } }), 8000)
     const order = await withTimeout(prisma.order.update({
       where: { id: orderId },
       data: updateData,
       include: { createdBy: { select: { name: true } } },
     }), 8000)
 
+    // Auditoria
+    await auditLog({
+      userId,
+      action: 'ORDER_STATUS',
+      entity: 'Order',
+      entityId: orderId,
+      from: { status: before?.status },
+      to: { status: order.status },
+      meta: { action },
+    })
+
     return NextResponse.json(order)
   } catch (error) {
-    console.error('Erro ao atualizar pedido:', error)
+    logger.error('Erro ao atualizar pedido:', error)
     return apiError(500, 'Erro interno do servidor')
   }
 }
