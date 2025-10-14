@@ -469,19 +469,18 @@ export default function PedidosPage() {
 
   return (
     <ResponsiveLayout title="Gerenciamento de Pedidos">
-      <div className="max-w-7xl mx-auto p-4 md:p-0">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 md:mb-8 space-y-4 md:space-y-0">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Gerenciamento de Pedidos</h2>
-              {canCreateOrder && (
-                <Link href="/pedidos/novo">
-                  <button className="flex items-center bg-red-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors w-full md:w-auto justify-center">
-                    <PlusCircle className="h-5 w-5 mr-2" />
-                    Novo Pedido
-                  </button>
-                </Link>
-              )}
-            </div>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Gerenciamento de Pedidos</h2>
+          {canCreateOrder && (
+            <Link href="/pedidos/novo">
+              <button className="flex items-center bg-red-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-red-700 transition-colors w-full md:w-auto justify-center">
+                <PlusCircle className="h-5 w-5 mr-2" />
+                Novo Pedido
+              </button>
+            </Link>
+          )}
+        </div>
 
             <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 space-y-4 md:space-y-0">
@@ -737,12 +736,6 @@ export default function PedidosPage() {
                     <option value={20}>20</option>
                     <option value={50}>50</option>
                   </select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="px-3 py-1 border rounded disabled:opacity-50 dark:bg-gray-700 dark:border-gray-600" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page<=1}>Anterior</button>
-                  <span className="text-sm">Página {page}</span>
-                  <button className="px-3 py-1 border rounded dark:bg-gray-700 dark:border-gray-600" onClick={() => setPage(p => p+1)}>Próxima</button>
-                </div>
               </div>
             </div>
           </div>
