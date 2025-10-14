@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { prisma } from '@/lib/prisma'
-import PDFDocument from 'pdfkit'
+// Removed pdfkit due to font file dependency in serverless bundles
 import { z } from 'zod'
 import { apiError, withTimeout } from '@/lib/api'
 import { logger } from '@/lib/logger'
@@ -122,83 +122,68 @@ export async function GET(req: NextRequest) {
     const activeCols = columns.filter(c => selectedFields.includes(c.key))
 
     if (format === 'pdf') {
-      // Generate PDF and wait for stream to finish
-      const buffer = await new Promise<Buffer>((resolve, reject) => {
-        const doc = new PDFDocument({ size: 'A4', margin: 40 })
-        const chunks: Uint8Array[] = []
-        doc.on('data', (chunk: any) => {
-          if (chunk instanceof Uint8Array) {
-            chunks.push(chunk)
-          } else if (typeof chunk === 'string') {
-            chunks.push(new TextEncoder().encode(chunk))
-          } else {
-            try {
-              chunks.push(new Uint8Array(chunk))
-            } catch {
-              const s = String(chunk)
-              chunks.push(new TextEncoder().encode(s))
-            }
-          }
-        })
-        doc.on('end', () => resolve(Buffer.concat(chunks as readonly Uint8Array[])))
-        doc.on('error', reject)
+      // Generate a minimal PDF without external font files
+      const escape = (s: string) => s.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)')
+      const lines: string[] = []
+      lines.push('Relatório de Pedidos')
+      // Header row
+      lines.push(activeCols.map(c => c.label).join(' | '))
+      // First ~50 rows to avoid huge PDFs
+      const maxRows = Math.min(50, orders.length)
+      for (let i = 0; i < maxRows; i++) {
+        const o = orders[i]
+        const row = activeCols.map(c => String(c.getter(o) ?? '')).join(' | ')
+        lines.push(row)
+      }
 
-        // Header with simple Koxixo logo
-        const startX = 40, startY = 40
-        doc.rect(startX, startY, 24, 24).fill('#dc2626') // red square
-        doc.fillColor('#ffffff').fontSize(16).text('K', startX + 6, startY + 4)
-        doc.fillColor('#111827').fontSize(18).text('Koxixo - Relatório de Pedidos', startX + 34, startY + 2)
-        doc.moveDown()
-        doc.fillColor('#374151').fontSize(10).text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`)
+      // Build simple one-page PDF
+      const objects: string[] = []
+      const offsets: number[] = []
+      const pushObj = (s: string) => { offsets.push(size); objects.push(s + '\n'); size += Buffer.byteLength(s + '\n', 'utf8') }
+      let pdf = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'
+      let size = Buffer.byteLength(pdf, 'utf8')
 
-        // Table
-        const tableTop = 90
-        const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right
-        const colWidth = pageWidth / activeCols.length
-        let y = tableTop
+      // 1: Catalog
+      pushObj('1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj')
+      // 2: Pages
+      pushObj('2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj')
+      // 5: Font
+      pushObj('5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj')
+      // 3: Page (resources reference font 5 0 R)
+      pushObj('3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >> endobj')
+      // 4: Contents
+      const contentParts: string[] = []
+      contentParts.push('BT')
+      contentParts.push('/F1 12 Tf')
+      contentParts.push('72 760 Td')
+      contentParts.push(`(${escape(lines[0] || '')}) Tj`)
+      let y = 740
+      for (let i = 1; i < lines.length; i++) {
+        y -= 16
+        if (y < 60) break
+        contentParts.push(`72 ${y} Td`)
+        contentParts.push(`(${escape(lines[i])}) Tj`)
+      }
+      contentParts.push('ET')
+      const contentStream = contentParts.join('\n')
+      const content = `4 0 obj << /Length ${Buffer.byteLength(contentStream, 'utf8')} >> stream\n${contentStream}\nendstream endobj`
+      pushObj(content)
+      // 6: Info (optional)
+      pushObj('6 0 obj << /Producer (Koxixo) >> endobj')
 
-        doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#e5e7eb')
-        // Header row
-        doc.fontSize(10).fillColor('#111827')
-        activeCols.forEach((c, i) => {
-          doc.text(c.label, 40 + i * colWidth + 2, y, { width: colWidth - 4, continued: false })
-        })
-        y += 18
-        doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#e5e7eb')
+      // Build xref
+      const xrefStart = size
+      let xref = 'xref\n0 ' + (objects.length + 1) + '\n'
+      xref += '0000000000 65535 f \n'
+      for (const off of offsets) {
+        xref += (off.toString().padStart(10, '0')) + ' 00000 n \n'
+      }
+      const trailer = `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R /Info 6 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`
 
-        doc.fontSize(9).fillColor('#1f2937')
-        const lineHeight = 14
-        for (const o of orders) {
-          // Calculate row height based on the tallest wrapped cell
-          let maxHeight = lineHeight
-          activeCols.forEach((c) => {
-            const text = String(c.getter(o) ?? '')
-            const options = { width: colWidth - 4 }
-            const h = doc.heightOfString(text, options)
-            if (h + 6 > maxHeight) maxHeight = h + 6
-          })
-          if (y + maxHeight > doc.page.height - doc.page.margins.bottom) {
-            doc.addPage()
-            y = tableTop
-            // redraw header on new page
-            doc.fontSize(10).fillColor('#111827')
-            activeCols.forEach((c, i) => {
-              doc.text(c.label, 40 + i * colWidth + 2, y, { width: colWidth - 4 })
-            })
-            y += 18
-            doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#e5e7eb')
-            doc.fontSize(9).fillColor('#1f2937')
-          }
-          activeCols.forEach((c, i) => {
-            const text = String(c.getter(o) ?? '')
-            doc.text(text, 40 + i * colWidth + 2, y, { width: colWidth - 4 })
-          })
-          y += maxHeight
-          doc.moveTo(40, y - 6).lineTo(40 + pageWidth, y - 6).stroke('#f3f4f6')
-        }
-
-        doc.end()
-      })
+      // Concatenate full PDF
+      const body = objects.join('')
+      const full = pdf + body + xref + trailer
+      const buffer = Buffer.from(full, 'utf8')
       const filename = `relatorio-pedidos-${new Date().toISOString().slice(0,10)}.pdf`
       return new NextResponse(buffer as any, {
         headers: {
