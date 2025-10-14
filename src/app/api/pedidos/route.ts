@@ -214,11 +214,14 @@ export async function POST(req: NextRequest) {
       title: z.string().min(1),
       description: z.string().min(1),
       value: z.union([z.number(), z.string()]).optional().nullable(),
-      priority: z.string().optional(),
-      dueDate: z.string().datetime().optional().nullable(),
+      priority: z.string().optional().nullable(),
+      dueDate: z.string().optional().nullable(), // Aceita qualquer string de data
     })
     const parsed = schema.safeParse(body)
-    if (!parsed.success) return apiError(400, 'Entrada inválida', { message: parsed.error.message })
+    if (!parsed.success) {
+      logger.warn('Validation error:', parsed.error.message)
+      return apiError(400, 'Entrada inválida', { message: parsed.error.message })
+    }
     const { title, description, value, priority, dueDate } = parsed.data
 
   logger.debug('Recebido para criar pedido:', body)
