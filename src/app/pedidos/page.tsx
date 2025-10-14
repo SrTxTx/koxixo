@@ -231,9 +231,9 @@ export default function PedidosPage() {
       <button
         key="view"
         onClick={() => setViewingOrder(order)}
-        className="text-red-600 hover:text-red-800 text-sm px-3 py-1.5 rounded border border-red-300 hover:bg-red-50 flex items-center space-x-1 min-w-max"
+        className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 text-xs font-medium px-2.5 py-1.5 rounded border border-red-300 hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/20 whitespace-nowrap"
       >
-        <Eye className="h-3 w-3" />
+        <Eye className="h-3.5 w-3.5" />
         <span>Detalhes</span>
       </button>
     )
@@ -244,7 +244,7 @@ export default function PedidosPage() {
         <button
           key="approve"
           onClick={() => handleOrderAction(order.id, 'approve')}
-          className="text-green-600 hover:text-green-800 text-sm px-3 py-1.5 rounded border border-green-300 hover:bg-green-50 min-w-max"
+          className="text-xs font-medium px-2.5 py-1.5 rounded border border-green-300 text-green-600 hover:text-green-800 hover:bg-green-50 dark:border-green-700 dark:hover:bg-green-900/20 whitespace-nowrap"
         >
           Aprovar
         </button>,
@@ -254,7 +254,7 @@ export default function PedidosPage() {
             const reason = prompt('Motivo da rejeição:')
             if (reason) handleOrderAction(order.id, 'reject', reason)
           }}
-          className="text-red-600 hover:text-red-800 text-sm px-3 py-1.5 rounded border border-red-300 hover:bg-red-50 min-w-max"
+          className="text-xs font-medium px-2.5 py-1.5 rounded border border-red-300 text-red-600 hover:text-red-800 hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/20 whitespace-nowrap"
         >
           Rejeitar
         </button>
@@ -267,7 +267,7 @@ export default function PedidosPage() {
         <button
           key="start"
           onClick={() => handleOrderAction(order.id, 'start_production')}
-          className="text-red-600 hover:text-red-800 text-sm px-3 py-1.5 rounded border border-red-300 hover:bg-red-50 min-w-max"
+          className="text-xs font-medium px-2.5 py-1.5 rounded border border-blue-300 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:border-blue-700 dark:hover:bg-blue-900/20 whitespace-nowrap"
         >
           Iniciar Produção
         </button>
@@ -280,7 +280,7 @@ export default function PedidosPage() {
         <button
           key="complete"
           onClick={() => handleOrderAction(order.id, 'complete')}
-          className="text-green-600 hover:text-green-800 text-sm px-3 py-1.5 rounded border border-green-300 hover:bg-green-50 min-w-max"
+          className="text-xs font-medium px-2.5 py-1.5 rounded border border-green-300 text-green-600 hover:text-green-800 hover:bg-green-50 dark:border-green-700 dark:hover:bg-green-900/20 whitespace-nowrap"
         >
           Finalizar
         </button>
@@ -293,7 +293,7 @@ export default function PedidosPage() {
         <button
           key="deliver"
           onClick={() => handleOrderAction(order.id, 'deliver')}
-          className="text-purple-600 hover:text-purple-800 text-sm px-3 py-1.5 rounded border border-purple-300 hover:bg-purple-50 min-w-max"
+          className="text-xs font-medium px-2.5 py-1.5 rounded border border-purple-300 text-purple-600 hover:text-purple-800 hover:bg-purple-50 dark:border-purple-700 dark:hover:bg-purple-900/20 whitespace-nowrap"
         >
           Marcar Entregue
         </button>
@@ -306,9 +306,9 @@ export default function PedidosPage() {
         <button
           key="resubmit"
           onClick={() => handleOrderAction(order.id, 'resubmit')}
-          className="text-red-600 hover:text-red-800 text-sm px-3 py-1.5 rounded border border-red-300 hover:bg-red-50 min-w-max"
+          className="text-xs font-medium px-2.5 py-1.5 rounded border border-yellow-300 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 dark:border-yellow-700 dark:hover:bg-yellow-900/20 whitespace-nowrap"
         >
-          Reenviar para Aprovação
+          Reenviar
         </button>
       )
     }
@@ -328,7 +328,7 @@ export default function PedidosPage() {
           <button
             key="edit"
             onClick={() => handleEditOrder(order)}
-            className="text-gray-600 hover:text-gray-800 text-sm px-3 py-1.5 rounded border border-gray-300 hover:bg-gray-50 min-w-max"
+            className="text-xs font-medium px-2.5 py-1.5 rounded border border-gray-300 text-gray-600 hover:text-gray-800 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 whitespace-nowrap"
           >
             Editar
           </button>
@@ -470,6 +470,7 @@ export default function PedidosPage() {
   return (
     <ResponsiveLayout title="Gerenciamento de Pedidos">
       <div className="space-y-6">
+        {/* Header com título e botão Novo Pedido */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Gerenciamento de Pedidos</h2>
           {canCreateOrder && (
@@ -482,7 +483,8 @@ export default function PedidosPage() {
           )}
         </div>
 
-            <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        {/* Card principal com filtros e tabela */}
+        <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 space-y-4 md:space-y-0">
                 <div className="relative w-full md:max-w-md">
                   <input
@@ -656,7 +658,7 @@ export default function PedidosPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none" onClick={() => { setSortBy('createdBy' as any); setSortDir(d => d === 'asc' ? 'desc' : 'asc') }}>Criado por</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none" onClick={() => { setSortBy('updatedAt'); setSortDir(d => d === 'asc' ? 'desc' : 'asc') }}>Editado por</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none" onClick={() => { setSortBy('createdAt'); setSortDir(d => d === 'asc' ? 'desc' : 'asc') }}>Data {sortBy==='createdAt' ? (sortDir==='asc' ? '▲' : '▼') : ''}</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-72">Ações</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[280px]">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -716,8 +718,8 @@ export default function PedidosPage() {
                               {new Date(order.createdAt).toLocaleDateString()}
                             </td>
                           )}
-                          <td className="px-6 py-6 text-sm">
-                            <div className="flex flex-wrap gap-2 min-w-max">
+                          <td className="px-4 py-4 text-sm">
+                            <div className="flex flex-wrap gap-1.5 items-center justify-start">
                               {getActionButtons(order)}
                             </div>
                           </td>
@@ -736,10 +738,15 @@ export default function PedidosPage() {
                     <option value={20}>20</option>
                     <option value={50}>50</option>
                   </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="px-3 py-1 border rounded disabled:opacity-50 dark:bg-gray-700 dark:border-gray-600" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page<=1}>Anterior</button>
+                  <span className="text-sm">Página {page}</span>
+                  <button className="px-3 py-1 border rounded dark:bg-gray-700 dark:border-gray-600" onClick={() => setPage(p => p+1)}>Próxima</button>
+                </div>
               </div>
             </div>
           </div>
-      </div>
 
       {/* Modal de Detalhes */}
       {viewingOrder && (
