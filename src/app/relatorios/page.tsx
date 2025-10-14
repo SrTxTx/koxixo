@@ -16,7 +16,7 @@ type SummaryResponse = {
 }
 
 export default function RelatoriosPage() {
-  const { status } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
 
   const [rowLimit, setRowLimit] = useState(5000)
@@ -34,6 +34,15 @@ export default function RelatoriosPage() {
     'id','title','status','priority','value','createdAt','createdBy'
   ])
 
+  // Proteção: apenas ADMIN pode acessar relatórios
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login')
+    } else if (status === 'authenticated' && session?.user?.role !== 'ADMIN') {
+      router.push('/dashboard')
+    }
+  }, [status, session, router])
+
   // Inicializar com preferências padrão salvas localmente (se existirem)
   useEffect(() => {
     try {
@@ -49,12 +58,6 @@ export default function RelatoriosPage() {
       }
     } catch {}
   }, [])
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login')
-    }
-  }, [status, router])
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams()

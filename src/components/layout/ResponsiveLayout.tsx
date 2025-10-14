@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react'
 import { Menu, X, Bell, Settings, User, Search, Home, ClipboardList, FileText, Users as UsersIcon, LogOut, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { ThemeToggle } from '../ui/ThemeToggle'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 
 interface ResponsiveLayoutProps {
@@ -22,6 +22,7 @@ export function ResponsiveLayout({
   actions,
   showSearch = false 
 }: ResponsiveLayoutProps) {
+  const { data: session } = useSession()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -262,14 +263,18 @@ export function ResponsiveLayout({
             <ClipboardList className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
             <span>Pedidos</span>
           </Link>
-          <Link href="/usuarios" className={`flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${pathname?.startsWith('/usuarios') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : ''}`} aria-current={pathname?.startsWith('/usuarios') ? 'page' : undefined}>
-            <UsersIcon className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
-            <span>Usuários</span>
-          </Link>
-          <Link href="/relatorios" className={`flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${pathname?.startsWith('/relatorios') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : ''}`} aria-current={pathname?.startsWith('/relatorios') ? 'page' : undefined}>
-            <FileText className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
-            <span>Relatórios</span>
-          </Link>
+          {session?.user?.role === 'ADMIN' && (
+            <>
+              <Link href="/usuarios" className={`flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${pathname?.startsWith('/usuarios') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : ''}`} aria-current={pathname?.startsWith('/usuarios') ? 'page' : undefined}>
+                <UsersIcon className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+                <span>Usuários</span>
+              </Link>
+              <Link href="/relatorios" className={`flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${pathname?.startsWith('/relatorios') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : ''}`} aria-current={pathname?.startsWith('/relatorios') ? 'page' : undefined}>
+                <FileText className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+                <span>Relatórios</span>
+              </Link>
+            </>
+          )}
           <Link href="/estoque" className={`flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${pathname?.startsWith('/estoque') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : ''}`} aria-current={pathname?.startsWith('/estoque') ? 'page' : undefined}>
             <ClipboardList className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
             <span>Estoque</span>
@@ -303,14 +308,18 @@ export function ResponsiveLayout({
                 <ClipboardList className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
                 <span>Pedidos</span>
               </Link>
-              <Link href="/usuarios" onClick={() => setSidebarOpen(false)} className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                <UsersIcon className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
-                <span>Usuários</span>
-              </Link>
-              <Link href="/relatorios" onClick={() => setSidebarOpen(false)} className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                <FileText className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
-                <span>Relatórios</span>
-              </Link>
+              {session?.user?.role === 'ADMIN' && (
+                <>
+                  <Link href="/usuarios" onClick={() => setSidebarOpen(false)} className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <UsersIcon className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+                    <span>Usuários</span>
+                  </Link>
+                  <Link href="/relatorios" onClick={() => setSidebarOpen(false)} className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <FileText className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+                    <span>Relatórios</span>
+                  </Link>
+                </>
+              )}
               <Link href="/estoque" onClick={() => setSidebarOpen(false)} className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                 <ClipboardList className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
                 <span>Estoque</span>
