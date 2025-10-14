@@ -212,5 +212,3 @@ model StockMovement {
   @@index([type])
   @@index([productId, createdAt])
 }
-  @@index([createdAt])
-}
