@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 import { PlusCircle, Edit, Package, Search } from 'lucide-react'
 
 interface Product {
@@ -26,6 +27,7 @@ interface ProductForm {
 export default function EstoquePage() {
   const [items, setItems] = useState<Product[]>([])
   const [q, setQ] = useState('')
+  const debouncedQ = useDebounce(q, 300)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -44,7 +46,7 @@ export default function EstoquePage() {
     setError(null)
     try {
       const url = new URL('/api/estoque', window.location.origin)
-      if (q) url.searchParams.set('q', q)
+      if (debouncedQ) url.searchParams.set('q', debouncedQ)
       const res = await fetch(url.toString(), { credentials: 'include' })
       if (!res.ok) throw new Error('Falha ao carregar estoque')
       const data = await res.json()
@@ -56,7 +58,7 @@ export default function EstoquePage() {
     }
   }
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => { fetchData() }, [debouncedQ])
 
   async function ajustar(id: number, type: 'IN' | 'OUT') {
     const value = prompt(`Quantidade para ${type === 'IN' ? 'entrada' : 'saída'}:`)

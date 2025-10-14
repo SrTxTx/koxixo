@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { loadServerPreferences, saveServerPreferences } from '@/lib/preferences'
 import useSWR from 'swr'
+import { swrDefaultConfig } from '@/lib/swr-config'
+import { useDebounce } from '@/lib/hooks/useDebounce'
 import { PlusCircle, Package, Filter, Search, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
@@ -37,6 +39,7 @@ export default function PedidosPage() {
   const [sortBy, setSortBy] = useState<'createdAt'|'updatedAt'|'value'|'priority'|'status'|'title'>('createdAt')
   const [sortDir, setSortDir] = useState<'asc'|'desc'>('desc')
   const [searchTerm, setSearchTerm] = useState('')
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
   // layout global cuida do sidebar/header
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [viewingOrder, setViewingOrder] = useState<Order | null>(null)
@@ -104,14 +107,14 @@ export default function PedidosPage() {
     if (filters.priority) sp.set('priority', filters.priority)
     if (filters.dateRange) sp.set('range', filters.dateRange)
     if (filters.createdBy) sp.set('createdBy', filters.createdBy)
-    if (searchTerm) {
-      sp.set('search', searchTerm)
+    if (debouncedSearchTerm) {
+      sp.set('search', debouncedSearchTerm)
       sp.set('searchIn', filters.searchIn)
     }
     return `/api/pedidos?${sp.toString()}`
   }
 
-  const { data, isLoading, mutate } = useSWR<Order[]>(session ? buildQuery() : null, fetcher, { revalidateOnFocus: true, keepPreviousData: true })
+  const { data, isLoading, mutate } = useSWR<Order[]>(session ? buildQuery() : null, fetcher, swrDefaultConfig)
 
   useEffect(() => {
     if (data) {
