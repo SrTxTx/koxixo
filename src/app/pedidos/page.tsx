@@ -260,7 +260,9 @@ export default function PedidosPage() {
           className="text-xs font-medium px-2.5 py-1.5 rounded border border-green-300 text-green-600 hover:text-green-800 hover:bg-green-50 dark:border-green-700 dark:hover:bg-green-900/20 whitespace-nowrap"
         >
           Aprovar
-        </button>,
+        </button>
+      )
+      buttons.push(
         <button
           key="reject"
           onClick={(e) => {
