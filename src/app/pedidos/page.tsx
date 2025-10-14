@@ -139,6 +139,7 @@ export default function PedidosPage() {
   }, [session, mutate])
 
   const handleOrderAction = async (orderId: number, action: string, rejectionReason?: string) => {
+    console.log('handleOrderAction chamada:', { orderId, action, rejectionReason })
     try {
       const response = await fetch(`/api/pedidos/${orderId}`, {
         method: 'PATCH',
@@ -150,7 +151,8 @@ export default function PedidosPage() {
       })
 
       if (response.ok) {
-  await mutate() // Revalida lista
+        await mutate() // Revalida lista
+        toast.success('Ação executada com sucesso!', 'Pedidos')
       } else {
         const data = await response.json()
         if (response.status === 401) {
@@ -169,6 +171,7 @@ export default function PedidosPage() {
   const modalRef = useRef<HTMLDivElement>(null)
 
   const handleEditOrder = (order: Order) => {
+    console.log('handleEditOrder chamada:', order.id)
     lastFocusedRef.current = document.activeElement as HTMLElement
     setEditingOrder(order)
     setEditForm({
@@ -224,13 +227,18 @@ export default function PedidosPage() {
 
   const getActionButtons = (order: Order) => {
     const userRole = session?.user.role
-    const buttons = []
+    const buttons: JSX.Element[] = []
 
     // Botão "Ver Detalhes" - sempre disponível para todos os usuários
     buttons.push(
       <button
         key="view"
-        onClick={() => setViewingOrder(order)}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          console.log('Botão Detalhes clicado:', order.id)
+          setViewingOrder(order)
+        }}
         className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 text-xs font-medium px-2.5 py-1.5 rounded border border-red-300 hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/20 whitespace-nowrap"
       >
         <Eye className="h-3.5 w-3.5" />
@@ -243,14 +251,22 @@ export default function PedidosPage() {
       buttons.push(
         <button
           key="approve"
-          onClick={() => handleOrderAction(order.id, 'approve')}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            console.log('Botão Aprovar clicado:', order.id)
+            handleOrderAction(order.id, 'approve')
+          }}
           className="text-xs font-medium px-2.5 py-1.5 rounded border border-green-300 text-green-600 hover:text-green-800 hover:bg-green-50 dark:border-green-700 dark:hover:bg-green-900/20 whitespace-nowrap"
         >
           Aprovar
         </button>,
         <button
           key="reject"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            console.log('Botão Rejeitar clicado:', order.id)
             const reason = prompt('Motivo da rejeição:')
             if (reason) handleOrderAction(order.id, 'reject', reason)
           }}
@@ -266,7 +282,12 @@ export default function PedidosPage() {
       buttons.push(
         <button
           key="start"
-          onClick={() => handleOrderAction(order.id, 'start_production')}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            console.log('Botão Iniciar Produção clicado:', order.id)
+            handleOrderAction(order.id, 'start_production')
+          }}
           className="text-xs font-medium px-2.5 py-1.5 rounded border border-blue-300 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:border-blue-700 dark:hover:bg-blue-900/20 whitespace-nowrap"
         >
           Iniciar Produção
@@ -279,7 +300,12 @@ export default function PedidosPage() {
       buttons.push(
         <button
           key="complete"
-          onClick={() => handleOrderAction(order.id, 'complete')}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            console.log('Botão Finalizar clicado:', order.id)
+            handleOrderAction(order.id, 'complete')
+          }}
           className="text-xs font-medium px-2.5 py-1.5 rounded border border-green-300 text-green-600 hover:text-green-800 hover:bg-green-50 dark:border-green-700 dark:hover:bg-green-900/20 whitespace-nowrap"
         >
           Finalizar
@@ -292,7 +318,12 @@ export default function PedidosPage() {
       buttons.push(
         <button
           key="deliver"
-          onClick={() => handleOrderAction(order.id, 'deliver')}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            console.log('Botão Marcar Entregue clicado:', order.id)
+            handleOrderAction(order.id, 'deliver')
+          }}
           className="text-xs font-medium px-2.5 py-1.5 rounded border border-purple-300 text-purple-600 hover:text-purple-800 hover:bg-purple-50 dark:border-purple-700 dark:hover:bg-purple-900/20 whitespace-nowrap"
         >
           Marcar Entregue
@@ -305,7 +336,12 @@ export default function PedidosPage() {
       buttons.push(
         <button
           key="resubmit"
-          onClick={() => handleOrderAction(order.id, 'resubmit')}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            console.log('Botão Reenviar clicado:', order.id)
+            handleOrderAction(order.id, 'resubmit')
+          }}
           className="text-xs font-medium px-2.5 py-1.5 rounded border border-yellow-300 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 dark:border-yellow-700 dark:hover:bg-yellow-900/20 whitespace-nowrap"
         >
           Reenviar
@@ -327,7 +363,12 @@ export default function PedidosPage() {
         buttons.push(
           <button
             key="edit"
-            onClick={() => handleEditOrder(order)}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              console.log('Botão Editar clicado:', order.id)
+              handleEditOrder(order)
+            }}
             className="text-xs font-medium px-2.5 py-1.5 rounded border border-gray-300 text-gray-600 hover:text-gray-800 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 whitespace-nowrap"
           >
             Editar
