@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client'
 
 // Função para garantir que a URL do banco sempre tenha prepared_statements=false
 export const getDatabaseUrl = () => {
-  // Em produção, preferir DIRECT_URL se disponível (evita pooler do Supabase)
+  // SEMPRE preferir DIRECT_URL em produção para evitar limites do pooler Supabase
   const baseUrl = process.env.DIRECT_URL || process.env.DATABASE_URL || ''
   
   if (!baseUrl) {
@@ -12,11 +12,18 @@ export const getDatabaseUrl = () => {
   // Remover qualquer prepared_statements existente
   let cleanUrl = baseUrl.replace(/[&?]prepared_statements=(true|false)/g, '')
   
-  // Garantir que sempre termine com prepared_statements=false
+  // Adicionar parâmetros de conexão otimizados para serverless
+  const params = [
+    'prepared_statements=false',
+    'connection_limit=1',      // Limite de 1 conexão por instância serverless
+    'pool_timeout=10',         // Timeout de 10s para pegar conexão do pool
+    'connect_timeout=10',      // Timeout de 10s para conectar
+  ]
+  
   if (cleanUrl.includes('?')) {
-    return `${cleanUrl}&prepared_statements=false`
+    return `${cleanUrl}&${params.join('&')}`
   } else {
-    return `${cleanUrl}?prepared_statements=false`
+    return `${cleanUrl}?${params.join('&')}`
   }
 }
 

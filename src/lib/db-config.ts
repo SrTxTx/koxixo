@@ -20,12 +20,27 @@ export const dbConfig = {
 
 // Função helper para tratar erros específicos do PostgreSQL
 export const handlePrismaError = (error: any) => {
-  // Erro específico de prepared statement - mais robusto
-  if (error.code === '42P05' || 
-      error.message?.includes('prepared statement') ||
-      error.message?.includes('already exists') ||
+  const code = error?.code || ''
+  const message = error?.message || ''
+  
+  // P1001: Can't reach database server
+  if (code === 'P1001' || message.includes("Can't reach database")) {
+    logger.warn('🔄 Database connection lost (P1001), retry recommended')
+    return { retry: true, delay: 1000, createNewClient: true }
+  }
+  
+  // P1008: Operations timed out
+  if (code === 'P1008' || message.includes('timed out')) {
+    logger.warn('🔄 Database timeout (P1008), retry recommended')
+    return { retry: true, delay: 500, createNewClient: false }
+  }
+  
+  // Erro específico de prepared statement
+  if (code === '42P05' || 
+      message?.includes('prepared statement') ||
+      message?.includes('already exists') ||
       error.kind?.QueryError?.PostgresError?.code === '42P05') {
-  logger.warn('🔄 Prepared statement error detected, retrying with new client...')
+    logger.warn('🔄 Prepared statement error detected, retrying with new client...')
     return { retry: true, delay: 200, createNewClient: true }
   }
   

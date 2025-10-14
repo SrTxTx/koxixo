@@ -4,6 +4,7 @@ import { getDatabaseUrl, getProductionConfig } from './database-url'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
+  prismaConnectionAttempts: number
 }
 
 // Configuração específica para resolver problemas de prepared statements
@@ -23,7 +24,30 @@ const createPrismaClient = () => {
   
   logger.info('🔧 Criando cliente Prisma com configurações otimizadas')
   
-  return new PrismaClient(config)
+  const client = new PrismaClient(config)
+  
+  // Adicionar retry logic em caso de P1001
+  const originalConnect = client.$connect.bind(client)
+  client.$connect = async () => {
+    let retries = 3
+    while (retries > 0) {
+      try {
+        await originalConnect()
+        logger.info('✅ Prisma conectado com sucesso')
+        return
+      } catch (err: any) {
+        retries--
+        if (err?.code === 'P1001' && retries > 0) {
+          logger.warn(`⚠️ P1001 ao conectar, tentando novamente... (${3 - retries}/3)`)
+          await new Promise(r => setTimeout(r, 1000))
+        } else {
+          throw err
+        }
+      }
+    }
+  }
+  
+  return client
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient()
