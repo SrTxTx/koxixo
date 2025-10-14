@@ -77,7 +77,8 @@ export default withAuth(
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
-      "script-src 'self'",
+      // Next.js requer unsafe-eval e unsafe-inline para dev/prod com webpack chunks
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "connect-src 'self'",
       "frame-src 'none'",
       "form-action 'self'"
