@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { apiError, withTimeout } from '@/lib/api'
 import { logger } from '@/lib/logger'
 import { auditLog } from '@/lib/audit'
+import { executeWithRetry } from '@/lib/db-config'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
@@ -96,30 +97,33 @@ export async function GET(req: NextRequest) {
     let total = 0
     
     try {
-      const [ordersData, totalData] = await Promise.all([
-        withTimeout(prisma.order.findMany({
-          where,
-          orderBy,
-          skip,
-          take,
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            status: true,
-            priority: true,
-            value: true,
-            createdAt: true,
-            lastEditedAt: true,
-            rejectionReason: true,
-            rejectedAt: true,
-            createdBy: { select: { name: true } },
-            lastEditedBy: { select: { name: true } },
-            rejectedBy: { select: { name: true } },
-          },
-        }), 8000),
-        withTimeout(prisma.order.count({ where }), 8000),
-      ])
+      // Executar queries em paralelo com timeout de 15 segundos e retry automático
+      const [ordersData, totalData] = await executeWithRetry(async () => {
+        return Promise.all([
+          withTimeout(prisma.order.findMany({
+            where,
+            orderBy,
+            skip,
+            take,
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              status: true,
+              priority: true,
+              value: true,
+              createdAt: true,
+              lastEditedAt: true,
+              rejectionReason: true,
+              rejectedAt: true,
+              createdBy: { select: { name: true } },
+              lastEditedBy: { select: { name: true } },
+              rejectedBy: { select: { name: true } },
+            },
+          }), 15000), // Aumentado de 8s para 15s
+          withTimeout(prisma.order.count({ where }), 15000),
+        ])
+      }, 3) // 3 tentativas com retry automático
       orders = ordersData
       total = totalData
     } catch (err: any) {
@@ -168,7 +172,7 @@ export async function GET(req: NextRequest) {
           ORDER BY o.created_at DESC
           ${limitClause}
           ${offsetClause}
-        `, ...params), 8000)
+        `, ...params), 15000) // Aumentado de 8s para 15s
         
         // Normalize structure to match Prisma shape
         orders = orders.map((o: any) => ({
