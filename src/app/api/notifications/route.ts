@@ -29,53 +29,42 @@ export async function GET(req: NextRequest) {
     const since = sinceRaw ? new Date(sinceRaw) : undefined
 
     // Buscar pedidos recentes com campos necessários para derivar eventos
+    // Usando raw SQL como caminho primário para evitar P2032 (enum/string mismatch)
     let orders: any[] = []
     try {
-      orders = await withTimeout(prisma.order.findMany({
-        orderBy: { updatedAt: 'desc' },
-        take: 100, // buscar um pouco mais para derivar eventos suficientes
-        select: {
-          id: true,
-          createdById: true,
-          title: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true,
-          createdBy: { select: { name: true } },
-          approvedAt: true,
-          approvedBy: { select: { name: true } },
-          rejectedAt: true,
-          rejectedBy: { select: { name: true } },
-          rejectionReason: true,
-          completedAt: true,
-          completedBy: { select: { name: true } },
-          deliveredAt: true,
-          deliveredBy: { select: { name: true } },
-          lastEditedAt: true,
-          lastEditedBy: { select: { name: true } },
-        },
-      }), 8000)
-    } catch (err: any) {
-      // Fallback para compatibilidade com esquemas e tipos divergentes (ex.: enum vs string)
-      logger.warn('Notifications rich query failed, using raw fallback:', err?.message || err)
-      try {
-        // Consulta direta com cast explícito do enum/status para texto e colunas mapeadas
-        orders = await withTimeout(prisma.$queryRaw<any[]>`
-          SELECT
-            id,
-            created_by_id AS "createdById",
-            title,
-            status::text AS "status",
-            created_at AS "createdAt",
-            updated_at AS "updatedAt"
-          FROM "orders"
-          ORDER BY updated_at DESC
-          LIMIT 100
-        `, 8000)
-      } catch (rawErr: any) {
-        logger.warn('Notifications raw fallback failed:', rawErr?.message || rawErr)
-        orders = []
-      }
+      orders = await withTimeout(prisma.$queryRaw<any[]>`
+        SELECT
+          o.id,
+          o.created_by_id AS "createdById",
+          o.title,
+          o.status::text AS "status",
+          o.created_at AS "createdAt",
+          o.updated_at AS "updatedAt",
+          o.approved_at AS "approvedAt",
+          o.rejected_at AS "rejectedAt",
+          o.rejection_reason AS "rejectionReason",
+          o.completed_at AS "completedAt",
+          o.delivered_at AS "deliveredAt",
+          o.last_edited_at AS "lastEditedAt",
+          cb.name AS "createdByName",
+          ab.name AS "approvedByName",
+          rb.name AS "rejectedByName",
+          cpb.name AS "completedByName",
+          db.name AS "deliveredByName",
+          leb.name AS "lastEditedByName"
+        FROM "orders" o
+        LEFT JOIN "users" cb ON o.created_by_id = cb.id
+        LEFT JOIN "users" ab ON o.approved_by_id = ab.id
+        LEFT JOIN "users" rb ON o.rejected_by_id = rb.id
+        LEFT JOIN "users" cpb ON o.completed_by_id = cpb.id
+        LEFT JOIN "users" db ON o.delivered_by_id = db.id
+        LEFT JOIN "users" leb ON o.last_edited_by_id = leb.id
+        ORDER BY o.updated_at DESC
+        LIMIT 100
+      `, 8000)
+    } catch (rawErr: any) {
+      logger.warn('Notifications raw query failed:', rawErr?.message || rawErr)
+      orders = []
     }
 
     const userId = parseInt(session.user.id, 10)
@@ -99,7 +88,7 @@ export async function GET(req: NextRequest) {
           id: `${o.id}-CREATED-${toMs((o as any).createdAt)}`,
           orderId: o.id,
           type: 'CREATED',
-          message: `Novo pedido #${o.id} criado por ${o.createdBy?.name || 'Usuário'}: ${o.title}`,
+          message: `Novo pedido #${o.id} criado por ${(o as any).createdByName || 'Usuário'}: ${o.title}`,
           at: toISO((o as any).createdAt),
           createdById: o.createdById,
         })
@@ -110,7 +99,7 @@ export async function GET(req: NextRequest) {
           id: `${o.id}-APPROVED-${toMs((o as any).approvedAt)}`,
           orderId: o.id,
           type: 'APPROVED',
-          message: `Pedido #${o.id} aprovado${(o as any).approvedBy?.name ? ` por ${(o as any).approvedBy.name}` : ''}`,
+          message: `Pedido #${o.id} aprovado${(o as any).approvedByName ? ` por ${(o as any).approvedByName}` : ''}`,
           at: toISO((o as any).approvedAt),
           createdById: o.createdById,
         })
@@ -121,7 +110,7 @@ export async function GET(req: NextRequest) {
           id: `${o.id}-REJECTED-${toMs((o as any).rejectedAt)}`,
           orderId: o.id,
           type: 'REJECTED',
-          message: `Pedido #${o.id} rejeitado${(o as any).rejectedBy?.name ? ` por ${(o as any).rejectedBy.name}` : ''}${(o as any).rejectionReason ? `: ${(o as any).rejectionReason}` : ''}`,
+          message: `Pedido #${o.id} rejeitado${(o as any).rejectedByName ? ` por ${(o as any).rejectedByName}` : ''}${(o as any).rejectionReason ? `: ${(o as any).rejectionReason}` : ''}`,
           at: toISO((o as any).rejectedAt),
           createdById: o.createdById,
         })
@@ -143,7 +132,7 @@ export async function GET(req: NextRequest) {
           id: `${o.id}-COMPLETED-${toMs((o as any).completedAt)}`,
           orderId: o.id,
           type: 'COMPLETED',
-          message: `Produção concluída do pedido #${o.id}${(o as any).completedBy?.name ? ` por ${(o as any).completedBy.name}` : ''}`,
+          message: `Produção concluída do pedido #${o.id}${(o as any).completedByName ? ` por ${(o as any).completedByName}` : ''}`,
           at: toISO((o as any).completedAt),
           createdById: o.createdById,
         })
@@ -154,7 +143,7 @@ export async function GET(req: NextRequest) {
           id: `${o.id}-DELIVERED-${toMs((o as any).deliveredAt)}`,
           orderId: o.id,
           type: 'DELIVERED',
-          message: `Pedido #${o.id} entregue${(o as any).deliveredBy?.name ? ` por ${(o as any).deliveredBy.name}` : ''}`,
+          message: `Pedido #${o.id} entregue${(o as any).deliveredByName ? ` por ${(o as any).deliveredByName}` : ''}`,
           at: toISO((o as any).deliveredAt),
           createdById: o.createdById,
         })
@@ -165,7 +154,7 @@ export async function GET(req: NextRequest) {
           id: `${o.id}-UPDATED-${toMs((o as any).lastEditedAt)}`,
           orderId: o.id,
           type: 'UPDATED',
-          message: `Pedido #${o.id} atualizado${(o as any).lastEditedBy?.name ? ` por ${(o as any).lastEditedBy.name}` : ''}`,
+          message: `Pedido #${o.id} atualizado${(o as any).lastEditedByName ? ` por ${(o as any).lastEditedByName}` : ''}`,
           at: toISO((o as any).lastEditedAt),
           createdById: o.createdById,
         })
