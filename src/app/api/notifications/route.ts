@@ -56,21 +56,26 @@ export async function GET(req: NextRequest) {
         },
       }), 8000)
     } catch (err: any) {
-      // Fallback para compatibilidade com esquemas mais antigos (sem joins/colunas adicionais)
-      logger.warn('Notifications rich query failed, using fallback select:', err?.message || err)
-      orders = await withTimeout(prisma.order.findMany({
-        orderBy: { updatedAt: 'desc' },
-        take: 100,
-        select: {
-          id: true,
-          createdById: true,
-          title: true,
-          status: true,
-          createdAt: true,
-          updatedAt: true,
-          // campos de datas específicas podem não existir, então omitimos no fallback
-        },
-      }), 8000)
+      // Fallback para compatibilidade com esquemas e tipos divergentes (ex.: enum vs string)
+      logger.warn('Notifications rich query failed, using raw fallback:', err?.message || err)
+      try {
+        // Consulta direta com cast explícito do enum/status para texto e colunas mapeadas
+        orders = await withTimeout(prisma.$queryRaw<any[]>`
+          SELECT
+            id,
+            created_by_id AS "createdById",
+            title,
+            status::text AS "status",
+            created_at AS "createdAt",
+            updated_at AS "updatedAt"
+          FROM "orders"
+          ORDER BY updated_at DESC
+          LIMIT 100
+        `, 8000)
+      } catch (rawErr: any) {
+        logger.warn('Notifications raw fallback failed:', rawErr?.message || rawErr)
+        orders = []
+      }
     }
 
     const userId = parseInt(session.user.id, 10)
