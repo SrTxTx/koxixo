@@ -182,17 +182,50 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 400 })
   }
 
-    const order = await withTimeout(prisma.order.create({
-      data: {
-        title: String(title).trim(),
-        description: String(description).trim(),
-        value: finalValue,
-  priority: safePriority as any,
-  status: 'PENDING' as any,
-        createdById: createdById,
-        dueDate: finalDueDate,
-      },
-    }), 8000)
+    let order: any
+    try {
+      order = await withTimeout(prisma.order.create({
+        data: {
+          title: String(title).trim(),
+          description: String(description).trim(),
+          value: finalValue,
+          priority: safePriority as any,
+          status: 'PENDING' as any,
+          createdById: createdById,
+          dueDate: finalDueDate,
+        },
+      }), 8000)
+    } catch (err: any) {
+      // Fallback para incompatibilidade de tipos (P2032) entre enum/text no banco
+      if ((err?.code || '') === 'P2032') {
+        logger.warn('Prisma P2032 ao criar pedido; usando INSERT raw fallback')
+        const rows = await withTimeout(prisma.$queryRaw<any[]>`
+          INSERT INTO "orders" (
+            "title","description","value","status","priority","created_by_id","due_date"
+          ) VALUES (
+            ${String(title).trim()},
+            ${String(description).trim()},
+            ${finalValue},
+            ${'PENDING'},
+            ${safePriority},
+            ${createdById},
+            ${finalDueDate as any}
+          )
+          RETURNING
+            id,
+            title,
+            description,
+            status::text AS "status",
+            priority::text AS "priority",
+            value,
+            created_at AS "createdAt",
+            updated_at AS "updatedAt"
+        `, 8000)
+        order = rows?.[0]
+      } else {
+        throw err
+      }
+    }
     // Auditoria
     await auditLog({
       userId: createdById,
