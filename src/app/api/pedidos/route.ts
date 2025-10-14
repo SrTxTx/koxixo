@@ -7,6 +7,7 @@ import { auditLog } from '@/lib/audit'
 import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 // GET: Listar todos os pedidos
 export async function GET(req: NextRequest) {
@@ -171,10 +172,15 @@ export async function POST(req: NextRequest) {
       safePriority = 'MEDIUM'
     }
 
-    const createdById = parseInt(session.user.id, 10)
-    if (isNaN(createdById)) {
-        return NextResponse.json({ error: 'ID de usuário inválido' }, { status: 400 })
-    }
+  const createdById = parseInt(session.user.id, 10)
+  if (isNaN(createdById)) {
+    return NextResponse.json({ error: 'ID de usuário inválido' }, { status: 400 })
+  }
+  // Validar existência do usuário para evitar erro de FK (P2003)
+  const creator = await withTimeout(prisma.user.findUnique({ where: { id: createdById }, select: { id: true } }), 8000)
+  if (!creator) {
+    return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 400 })
+  }
 
     const order = await withTimeout(prisma.order.create({
       data: {
@@ -197,9 +203,18 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json(order, { status: 201 })
   } catch (error: any) {
-  logger.error('Erro detalhado ao criar pedido:', error)
-    if (String(error?.message || '').toLowerCase().includes('tempo limite')) {
+    logger.error('Erro detalhado ao criar pedido:', error)
+    const msg = String(error?.message || '').toLowerCase()
+    if (msg.includes('tempo limite')) {
       return apiError(504, 'Serviço indisponível', { message: 'Tempo limite ao criar pedido. Tente novamente.' })
+    }
+    // Mapear erros comuns do Prisma para respostas mais claras
+    const code = (error?.code || '').toString()
+    if (code === 'P2003') {
+      return apiError(400, 'Entrada inválida', { message: 'Usuário inválido para criar o pedido.' })
+    }
+    if (code === 'P2025') {
+      return apiError(404, 'Recurso não encontrado', { message: 'Registro relacionado não encontrado.' })
     }
     return apiError(500, 'Erro interno do servidor ao processar o pedido.', { message: error?.message })
   }
