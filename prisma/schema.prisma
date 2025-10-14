@@ -67,6 +67,9 @@ model User {
   stockMovements  StockMovement[]
 
   @@map("users")
+  @@index([email])
+  @@index([role])
+  @@index([createdAt])
 }
 
 model Order {
@@ -181,7 +184,10 @@ model Product {
   movements    StockMovement[]
 
   @@map("products")
+  @@index([sku])
   @@index([name])
+  @@index([active])
+  @@index([currentStock])
 }
 
 model StockMovement {
@@ -202,5 +208,9 @@ model StockMovement {
 
   @@map("stock_movements")
   @@index([productId])
+  @@index([createdAt])
+  @@index([type])
+  @@index([productId, createdAt])
+}
   @@index([createdAt])
 }
