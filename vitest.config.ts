@@ -8,5 +8,6 @@ export default defineConfig({
     reporters: ['default'],
     testTimeout: 30000,
     hookTimeout: 120000,
+    globalSetup: ['./tests/integration/globalSetup.ts']
   },
 })

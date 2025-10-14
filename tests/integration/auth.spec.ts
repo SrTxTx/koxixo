@@ -1,17 +1,8 @@
 import request from 'supertest'
-import { ensureServer, waitOn } from './helpers/server'
-
-let proc: any
 const base = 'http://localhost:3010'
 
 describe('Auth', () => {
-  beforeAll(async () => {
-    proc = await ensureServer(base)
-  }, 120000)
-
-  afterAll(async () => {
-    try { proc?.kill() } catch {}
-  })
+  beforeAll(async () => {}, 120000)
 
   it('should login with credentials', async () => {
     const agent = request.agent(base)

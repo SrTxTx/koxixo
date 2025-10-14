@@ -5,6 +5,7 @@ import { apiError, withTimeout } from '@/lib/api'
 import { logger } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 type Notif = {
   id: string
@@ -28,30 +29,49 @@ export async function GET(req: NextRequest) {
   const since = sinceRaw ? new Date(sinceRaw) : undefined
 
     // Buscar pedidos recentes com campos necessários para derivar eventos
-    const orders = await withTimeout(prisma.order.findMany({
-      orderBy: { updatedAt: 'desc' },
-      take: 100, // buscar um pouco mais para derivar eventos suficientes
-      select: {
-        id: true,
-        createdById: true,
-        title: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        createdBy: { select: { name: true } },
-        approvedAt: true,
-        approvedBy: { select: { name: true } },
-        rejectedAt: true,
-        rejectedBy: { select: { name: true } },
-        rejectionReason: true,
-        completedAt: true,
-        completedBy: { select: { name: true } },
-        deliveredAt: true,
-        deliveredBy: { select: { name: true } },
-        lastEditedAt: true,
-        lastEditedBy: { select: { name: true } },
-      },
-    }), 8000)
+    let orders: any[] = []
+    try {
+      orders = await withTimeout(prisma.order.findMany({
+        orderBy: { updatedAt: 'desc' },
+        take: 100, // buscar um pouco mais para derivar eventos suficientes
+        select: {
+          id: true,
+          createdById: true,
+          title: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          createdBy: { select: { name: true } },
+          approvedAt: true,
+          approvedBy: { select: { name: true } },
+          rejectedAt: true,
+          rejectedBy: { select: { name: true } },
+          rejectionReason: true,
+          completedAt: true,
+          completedBy: { select: { name: true } },
+          deliveredAt: true,
+          deliveredBy: { select: { name: true } },
+          lastEditedAt: true,
+          lastEditedBy: { select: { name: true } },
+        },
+      }), 8000)
+    } catch (err: any) {
+      // Fallback para compatibilidade com esquemas mais antigos (sem joins/colunas adicionais)
+      logger.warn('Notifications rich query failed, using fallback select:', err?.message || err)
+      orders = await withTimeout(prisma.order.findMany({
+        orderBy: { updatedAt: 'desc' },
+        take: 100,
+        select: {
+          id: true,
+          createdById: true,
+          title: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          // campos de datas específicas podem não existir, então omitimos no fallback
+        },
+      }), 8000)
+    }
 
   const userId = parseInt(session.user.id, 10)
   const role = session.user.role as string
@@ -70,24 +90,24 @@ export async function GET(req: NextRequest) {
         })
       }
       // Aprovado
-      if (o.approvedAt) {
+      if ((o as any).approvedAt) {
         events.push({
-          id: `${o.id}-APPROVED-${o.approvedAt.getTime()}`,
+          id: `${o.id}-APPROVED-${(o as any).approvedAt.getTime?.() ?? new Date((o as any).approvedAt).getTime?.()}`,
           orderId: o.id,
           type: 'APPROVED',
-          message: `Pedido #${o.id} aprovado${o.approvedBy?.name ? ` por ${o.approvedBy.name}` : ''}`,
-          at: o.approvedAt.toISOString(),
+          message: `Pedido #${o.id} aprovado${(o as any).approvedBy?.name ? ` por ${(o as any).approvedBy.name}` : ''}`,
+          at: ((o as any).approvedAt?.toISOString?.() ?? new Date((o as any).approvedAt).toISOString?.()) || new Date().toISOString(),
           createdById: o.createdById,
         })
       }
       // Rejeitado
-      if (o.rejectedAt) {
+      if ((o as any).rejectedAt) {
         events.push({
-          id: `${o.id}-REJECTED-${o.rejectedAt.getTime()}`,
+          id: `${o.id}-REJECTED-${(o as any).rejectedAt.getTime?.() ?? new Date((o as any).rejectedAt).getTime?.()}`,
           orderId: o.id,
           type: 'REJECTED',
-          message: `Pedido #${o.id} rejeitado${o.rejectedBy?.name ? ` por ${o.rejectedBy.name}` : ''}${o.rejectionReason ? `: ${o.rejectionReason}` : ''}`,
-          at: o.rejectedAt.toISOString(),
+          message: `Pedido #${o.id} rejeitado${(o as any).rejectedBy?.name ? ` por ${(o as any).rejectedBy.name}` : ''}${(o as any).rejectionReason ? `: ${(o as any).rejectionReason}` : ''}`,
+          at: ((o as any).rejectedAt?.toISOString?.() ?? new Date((o as any).rejectedAt).toISOString?.()) || new Date().toISOString(),
           createdById: o.createdById,
         })
       }
@@ -103,35 +123,35 @@ export async function GET(req: NextRequest) {
         })
       }
       // Concluído
-      if (o.completedAt) {
+      if ((o as any).completedAt) {
         events.push({
-          id: `${o.id}-COMPLETED-${o.completedAt.getTime()}`,
+          id: `${o.id}-COMPLETED-${(o as any).completedAt.getTime?.() ?? new Date((o as any).completedAt).getTime?.()}`,
           orderId: o.id,
           type: 'COMPLETED',
-          message: `Produção concluída do pedido #${o.id}${o.completedBy?.name ? ` por ${o.completedBy.name}` : ''}`,
-          at: o.completedAt.toISOString(),
+          message: `Produção concluída do pedido #${o.id}${(o as any).completedBy?.name ? ` por ${(o as any).completedBy.name}` : ''}`,
+          at: ((o as any).completedAt?.toISOString?.() ?? new Date((o as any).completedAt).toISOString?.()) || new Date().toISOString(),
           createdById: o.createdById,
         })
       }
       // Entregue
-      if (o.deliveredAt) {
+      if ((o as any).deliveredAt) {
         events.push({
-          id: `${o.id}-DELIVERED-${o.deliveredAt.getTime()}`,
+          id: `${o.id}-DELIVERED-${(o as any).deliveredAt.getTime?.() ?? new Date((o as any).deliveredAt).getTime?.()}`,
           orderId: o.id,
           type: 'DELIVERED',
-          message: `Pedido #${o.id} entregue${o.deliveredBy?.name ? ` por ${o.deliveredBy.name}` : ''}`,
-          at: o.deliveredAt.toISOString(),
+          message: `Pedido #${o.id} entregue${(o as any).deliveredBy?.name ? ` por ${(o as any).deliveredBy.name}` : ''}`,
+          at: ((o as any).deliveredAt?.toISOString?.() ?? new Date((o as any).deliveredAt).toISOString?.()) || new Date().toISOString(),
           createdById: o.createdById,
         })
       }
       // Editado
-      if (o.lastEditedAt) {
+      if ((o as any).lastEditedAt) {
         events.push({
-          id: `${o.id}-UPDATED-${o.lastEditedAt.getTime()}`,
+          id: `${o.id}-UPDATED-${(o as any).lastEditedAt.getTime?.() ?? new Date((o as any).lastEditedAt).getTime?.()}`,
           orderId: o.id,
           type: 'UPDATED',
-          message: `Pedido #${o.id} atualizado${o.lastEditedBy?.name ? ` por ${o.lastEditedBy.name}` : ''}`,
-          at: o.lastEditedAt.toISOString(),
+          message: `Pedido #${o.id} atualizado${(o as any).lastEditedBy?.name ? ` por ${(o as any).lastEditedBy.name}` : ''}`,
+          at: ((o as any).lastEditedAt?.toISOString?.() ?? new Date((o as any).lastEditedAt).toISOString?.()) || new Date().toISOString(),
           createdById: o.createdById,
         })
       }

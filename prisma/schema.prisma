@@ -29,6 +29,12 @@ enum OrderPriority {
   HIGH
 }
 
+enum MovementType {
+  IN
+  OUT
+  ADJUST
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -54,6 +60,11 @@ model User {
   // Relacionamentos - anexos e auditoria
   attachments Attachment[]
   auditLogs   AuditLog[]
+
+  // Relacionamentos - estoque
+  productsCreated Product[] @relation("ProductCreatedBy")
+  productsUpdated Product[] @relation("ProductUpdatedBy")
+  stockMovements  StockMovement[]
 
   @@map("users")
 }
@@ -102,6 +113,9 @@ model Order {
   // Anexos
   attachments Attachment[]
 
+  // Movimentações de estoque ligadas a este pedido (opcional)
+  stockMovements StockMovement[]
+
   @@map("orders")
   @@index([status])
   @@index([priority])
@@ -144,4 +158,49 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+model Product {
+  id           Int       @id @default(autoincrement())
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  sku          String    @unique
+  name         String
+  description  String?
+  unit         String    @default("UN")
+  price        Float?    @default(0)
+  minStock     Int?      @map("min_stock")
+  currentStock Int       @default(0) @map("current_stock")
+  active       Boolean   @default(true)
+
+  createdById  Int?      @map("created_by_id")
+  createdBy    User?     @relation("ProductCreatedBy", fields: [createdById], references: [id])
+  updatedById  Int?      @map("updated_by_id")
+  updatedBy    User?     @relation("ProductUpdatedBy", fields: [updatedById], references: [id])
+
+  movements    StockMovement[]
+
+  @@map("products")
+  @@index([name])
+}
+
+model StockMovement {
+  id          Int          @id @default(autoincrement())
+  createdAt   DateTime     @default(now()) @map("created_at")
+  type        MovementType
+  quantity    Int
+  reason      String?
+
+  productId   Int          @map("product_id")
+  product     Product      @relation(fields: [productId], references: [id])
+
+  createdById Int?         @map("created_by_id")
+  createdBy   User?        @relation(fields: [createdById], references: [id])
+
+  orderId     Int?         @map("order_id")
+  order       Order?       @relation(fields: [orderId], references: [id])
+
+  @@map("stock_movements")
+  @@index([productId])
+  @@index([createdAt])
 }

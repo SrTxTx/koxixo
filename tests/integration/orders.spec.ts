@@ -1,7 +1,4 @@
 import request from 'supertest'
-import { ensureServer, waitOn } from './helpers/server'
-
-let proc: any
 const base = 'http://localhost:3010'
 
 async function loginAndGetAgent() {
@@ -10,13 +7,7 @@ async function loginAndGetAgent() {
 }
 
 describe('Orders', () => {
-  beforeAll(async () => {
-    proc = await ensureServer(base)
-  }, 120000)
-
-  afterAll(async () => {
-    try { proc?.kill() } catch {}
-  })
+  beforeAll(async () => {}, 120000)
 
   it('should create an order and then change status', async () => {
   const agent = await loginAndGetAgent()

@@ -270,6 +270,10 @@ export function ResponsiveLayout({
             <FileText className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
             <span>Relatórios</span>
           </Link>
+          <Link href="/estoque" className={`flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 ${pathname?.startsWith('/estoque') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100' : ''}`} aria-current={pathname?.startsWith('/estoque') ? 'page' : undefined}>
+            <ClipboardList className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+            <span>Estoque</span>
+          </Link>
         </nav>
       </aside>
 
@@ -306,6 +310,10 @@ export function ResponsiveLayout({
               <Link href="/relatorios" onClick={() => setSidebarOpen(false)} className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                 <FileText className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
                 <span>Relatórios</span>
+              </Link>
+              <Link href="/estoque" onClick={() => setSidebarOpen(false)} className="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <ClipboardList className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-300" />
+                <span>Estoque</span>
               </Link>
             </nav>
           </div>

@@ -254,6 +254,17 @@ async function main() {
   console.log('  jose.operador@koxixo.com / 123456 (José Operador)')
   console.log('')
   console.log('📦 Pedidos de exemplo criados com diferentes status!')
+
+  // Criar produtos de exemplo
+  await (prisma as any).product.createMany({
+    data: [
+      { sku: 'PAPEL-A4-75', name: 'Papel Sulfite A4 75g', unit: 'PCT', price: 25.9, minStock: 10, currentStock: 50 },
+      { sku: 'TINTA-CMYK', name: 'Kit Tinta CMYK', unit: 'KIT', price: 199.0, minStock: 2, currentStock: 5 },
+      { sku: 'BANNER-LONA', name: 'Lona para Banner', unit: 'MT', price: 18.5, minStock: 20, currentStock: 200 },
+    ],
+    skipDuplicates: true,
+  })
+  console.log('📦 Produtos de estoque criados!')
 }
 
 main()

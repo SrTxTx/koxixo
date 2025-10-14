@@ -24,9 +24,18 @@ export async function ensureServer(baseUrl = 'http://localhost:3010') {
   // Always spawn a dedicated test server to control env
   const isWin = process.platform === 'win32'
   const cmd = isWin ? 'npm.cmd' : 'npm'
+  const npx = isWin ? 'npx.cmd' : 'npx'
   const url = new URL(baseUrl)
   const port = url.port || '3010'
   const args = ['run', 'dev', '--', '-p', port]
+  // Prepare database: generate client, push schema, seed
+  const run = (command: string, cargs: string[]) => new Promise<void>((resolve, reject) => {
+    const p = spawn(command, cargs, { shell: isWin, env: process.env, stdio: 'inherit' })
+    p.on('close', (code) => code === 0 ? resolve() : reject(new Error(`${command} ${cargs.join(' ')} exited with ${code}`)))
+  })
+  await run(npx, ['prisma', 'generate'])
+  await run(npx, ['prisma', 'db', 'push', '--force-reset'])
+  await run(npx, ['prisma', 'db', 'seed'])
   const child = spawn(cmd, args, {
     shell: isWin,
     env: { ...process.env, PORT: port, NEXTAUTH_URL: `http://localhost:${port}`, TEST_BYPASS_AUTH: '1' },
