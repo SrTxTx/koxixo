@@ -92,30 +92,97 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const [orders, total] = await Promise.all([
-      withTimeout(prisma.order.findMany({
-        where,
-        orderBy,
-        skip,
-        take,
-        select: {
-          id: true,
-          title: true,
-          description: true,
-          status: true,
-          priority: true,
-          value: true,
-          createdAt: true,
-          lastEditedAt: true,
-          rejectionReason: true,
-          rejectedAt: true,
-          createdBy: { select: { name: true } },
-          lastEditedBy: { select: { name: true } },
-          rejectedBy: { select: { name: true } },
-        },
-      }), 8000),
-      withTimeout(prisma.order.count({ where }), 8000),
-    ])
+    let orders: any[] = []
+    let total = 0
+    
+    try {
+      const [ordersData, totalData] = await Promise.all([
+        withTimeout(prisma.order.findMany({
+          where,
+          orderBy,
+          skip,
+          take,
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            status: true,
+            priority: true,
+            value: true,
+            createdAt: true,
+            lastEditedAt: true,
+            rejectionReason: true,
+            rejectedAt: true,
+            createdBy: { select: { name: true } },
+            lastEditedBy: { select: { name: true } },
+            rejectedBy: { select: { name: true } },
+          },
+        }), 8000),
+        withTimeout(prisma.order.count({ where }), 8000),
+      ])
+      orders = ordersData
+      total = totalData
+    } catch (err: any) {
+      // Fallback SQL se P2032 ou outro erro de tipo
+      if ((err?.code || '') === 'P2032' || String(err?.message || '').includes('converting field')) {
+        logger.warn('GET orders: P2032 detected, using raw SQL fallback')
+        // Build dynamic WHERE for raw SQL (simplified - handle common cases)
+        const conditions: string[] = []
+        const params: any[] = []
+        let paramIndex = 1
+        
+        if (status) {
+          conditions.push(`o.status = $${paramIndex}`)
+          params.push(status)
+          paramIndex++
+        }
+        if (priority) {
+          conditions.push(`o.priority = $${paramIndex}`)
+          params.push(priority)
+          paramIndex++
+        }
+        const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''
+        const limitClause = take ? `LIMIT ${take}` : ''
+        const offsetClause = skip ? `OFFSET ${skip}` : ''
+        
+        orders = await withTimeout(prisma.$queryRawUnsafe<any[]>(`
+          SELECT 
+            o.id,
+            o.title,
+            o.description,
+            o.status::text AS "status",
+            o.priority::text AS "priority",
+            o.value,
+            o.created_at AS "createdAt",
+            o.last_edited_at AS "lastEditedAt",
+            o.rejection_reason AS "rejectionReason",
+            o.rejected_at AS "rejectedAt",
+            cb.name AS "createdByName",
+            leb.name AS "lastEditedByName",
+            rb.name AS "rejectedByName"
+          FROM "orders" o
+          LEFT JOIN "users" cb ON o.created_by_id = cb.id
+          LEFT JOIN "users" leb ON o.last_edited_by_id = leb.id
+          LEFT JOIN "users" rb ON o.rejected_by_id = rb.id
+          ${whereClause}
+          ORDER BY o.created_at DESC
+          ${limitClause}
+          ${offsetClause}
+        `, ...params), 8000)
+        
+        // Normalize structure to match Prisma shape
+        orders = orders.map((o: any) => ({
+          ...o,
+          createdBy: o.createdByName ? { name: o.createdByName } : null,
+          lastEditedBy: o.lastEditedByName ? { name: o.lastEditedByName } : null,
+          rejectedBy: o.rejectedByName ? { name: o.rejectedByName } : null,
+        }))
+        
+        total = orders.length // Approximation for fallback
+      } else {
+        throw err
+      }
+    }
 
     // Preservar forma de resposta atual (array) para não quebrar a UI.
     const res = NextResponse.json(orders)

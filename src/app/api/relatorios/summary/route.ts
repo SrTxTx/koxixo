@@ -79,10 +79,31 @@ export async function GET(req: NextRequest) {
     }
 
   // Buscar pedidos filtrados uma vez e agregar em memória (janela limitada por padrão)
-    const orders = await withTimeout(prisma.order.findMany({
-      where,
-      select: { id: true, status: true, priority: true, value: true, createdAt: true, createdById: true },
-    }), 8000)
+    let orders: any[] = []
+    try {
+      orders = await withTimeout(prisma.order.findMany({
+        where,
+        select: { id: true, status: true, priority: true, value: true, createdAt: true, createdById: true },
+      }), 8000)
+    } catch (err: any) {
+      if ((err?.code || '') === 'P2032' || String(err?.message || '').includes('converting field')) {
+        logger.warn('Summary: P2032 detected, using raw SQL fallback')
+        orders = await withTimeout(prisma.$queryRaw<any[]>`
+          SELECT 
+            id,
+            status::text AS "status",
+            priority::text AS "priority",
+            value,
+            created_at AS "createdAt",
+            created_by_id AS "createdById"
+          FROM "orders"
+          ORDER BY created_at DESC
+          LIMIT 1000
+        `, 8000)
+      } else {
+        throw err
+      }
+    }
 
     const totalOrders = orders.length
     const totalValue = orders.reduce((sum, o) => sum + (o.value ?? 0), 0)

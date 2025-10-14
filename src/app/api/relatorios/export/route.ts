@@ -91,16 +91,59 @@ export async function GET(req: NextRequest) {
       if (dateTo) where.createdAt.lte = dateTo
     }
 
-    const orders = await withTimeout(prisma.order.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        createdBy: { select: { name: true } },
-        lastEditedBy: { select: { name: true } },
-        approvedBy: { select: { name: true } },
-        rejectedBy: { select: { name: true } },
-      },
-    }), 8000)
+    let orders: any[] = []
+    try {
+      orders = await withTimeout(prisma.order.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          createdBy: { select: { name: true } },
+          lastEditedBy: { select: { name: true } },
+          approvedBy: { select: { name: true } },
+          rejectedBy: { select: { name: true } },
+        },
+      }), 8000)
+    } catch (err: any) {
+      if ((err?.code || '') === 'P2032' || String(err?.message || '').includes('converting field')) {
+        logger.warn('Export: P2032 detected, using raw SQL fallback')
+        orders = await withTimeout(prisma.$queryRaw<any[]>`
+          SELECT 
+            o.id,
+            o.title,
+            o.description,
+            o.status::text AS "status",
+            o.priority::text AS "priority",
+            o.value,
+            o.created_at AS "createdAt",
+            o.due_date AS "dueDate",
+            o.completed_at AS "completedAt",
+            o.delivered_at AS "deliveredAt",
+            o.rejection_reason AS "rejectionReason",
+            cb.name AS "createdByName",
+            leb.name AS "lastEditedByName",
+            ab.name AS "approvedByName",
+            rb.name AS "rejectedByName"
+          FROM "orders" o
+          LEFT JOIN "users" cb ON o.created_by_id = cb.id
+          LEFT JOIN "users" leb ON o.last_edited_by_id = leb.id
+          LEFT JOIN "users" ab ON o.approved_by_id = ab.id
+          LEFT JOIN "users" rb ON o.rejected_by_id = rb.id
+          ORDER BY o.created_at DESC
+          LIMIT 500
+        `, 8000)
+        // Normalize to match Prisma shape
+        orders = orders.map((o: any) => ({
+          ...o,
+          createdBy: o.createdByName ? { name: o.createdByName } : null,
+          lastEditedBy: o.lastEditedByName ? { name: o.lastEditedByName } : null,
+          approvedBy: o.approvedByName ? { name: o.approvedByName } : null,
+          rejectedBy: o.rejectedByName ? { name: o.rejectedByName } : null,
+        }))
+      } else {
+        throw err
+      }
+    }
+    
     const columns: { key: string; label: string; getter: (o: any) => any }[] = [
       { key: 'id', label: 'ID', getter: (o) => o.id },
       { key: 'title', label: 'Título', getter: (o) => o.title },
