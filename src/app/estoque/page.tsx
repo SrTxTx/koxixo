@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
 import { useDebounce } from '@/lib/hooks/useDebounce'
 import { PlusCircle, Edit, Package, Search } from 'lucide-react'
@@ -41,7 +41,7 @@ export default function EstoquePage() {
     price: 0
   })
 
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -56,9 +56,9 @@ export default function EstoquePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [debouncedQ])
 
-  useEffect(() => { fetchData() }, [debouncedQ])
+  useEffect(() => { fetchData() }, [fetchData])
 
   async function ajustar(id: number, type: 'IN' | 'OUT') {
     const value = prompt(`Quantidade para ${type === 'IN' ? 'entrada' : 'saída'}:`)
