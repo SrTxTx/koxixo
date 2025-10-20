@@ -83,6 +83,54 @@ model Order {
   updatedAt   DateTime @updatedAt @map("updated_at")
   dueDate     DateTime? @map("due_date")
 
+  // Dados do Cliente e Medidas
+  clientName     String? @map("client_name")
+  sellerName     String? @map("seller_name")
+  width          Float? // Largura em metros
+  height         Float? // Altura em metros
+
+  // Tipo de Acabamento (checkboxes)
+  isReto            Boolean @default(false) @map("is_reto")
+  isSemiReto        Boolean @default(false) @map("is_semi_reto")
+  isComPregas       Boolean @default(false) @map("is_com_pregas")
+  isViraPau         Boolean @default(false) @map("is_vira_pau")
+  isIlhos           Boolean @default(false) @map("is_ilhos")
+  isIlhosEscondidos Boolean @default(false) @map("is_ilhos_escondidos")
+  isOutroAcabamento Boolean @default(false) @map("is_outro_acabamento")
+  outroAcabamento   String? @map("outro_acabamento")
+
+  // Uso do Tecido
+  isPorAltura       Boolean @default(false) @map("is_por_altura")
+  isPorMetrosCorridos Boolean @default(false) @map("is_por_metros_corridos")
+  isPostico         Boolean @default(false) @map("is_postico")
+  isAbertoAoMeio    Boolean @default(false) @map("is_aberto_ao_meio")
+  isEncaparCos      Boolean @default(false) @map("is_encapar_cos")
+
+  // Observações
+  observations String? @db.Text
+
+  // Tipo de Suporte (checkboxes)
+  isTrilho         Boolean @default(false) @map("is_trilho")
+  isTrilhoCurvo    Boolean @default(false) @map("is_trilho_curvo")
+  isVaraoVazado    Boolean @default(false) @map("is_varao_vazado")
+  isVaraGrossa     Boolean @default(false) @map("is_vara_grossa")
+  isVaraMedia      Boolean @default(false) @map("is_vara_media")
+  isCromado        Boolean @default(false) @map("is_cromado")
+  isAcoEscovado    Boolean @default(false) @map("is_aco_escovado")
+  isPreto          Boolean @default(false) @map("is_preto")
+  isBranco         Boolean @default(false) @map("is_branco")
+  isBege           Boolean @default(false) @map("is_bege")
+  isTabaco         Boolean @default(false) @map("is_tabaco")
+
+  // Materiais e Quantidades (JSON para flexibilidade)
+  materials Json? // {tecido: {orcada: 10, usada: 8}, postico: {...}, etc}
+
+  // Instalação
+  installationStatus String? @map("installation_status") // "sim", "nao", "pendente"
+  
+  // Costureira (preenchido pela produção)
+  seamstressName String? @map("seamstress_name")
+
   // Quem criou
   createdById Int @map("created_by_id")
   createdBy   User @relation("CreatedBy", fields: [createdById], references: [id])
