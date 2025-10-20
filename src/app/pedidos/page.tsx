@@ -393,7 +393,44 @@ export default function PedidosPage() {
 
   const handleCancelEdit = () => {
     setEditingOrder(null)
-    setEditForm({ title: '', description: '', priority: 'MEDIUM', value: '' })
+    setEditForm({
+      title: '',
+      description: '',
+      priority: 'MEDIUM',
+      value: '',
+      clientName: '',
+      sellerName: '',
+      width: '',
+      height: '',
+      isReto: false,
+      isSemiReto: false,
+      isComPregas: false,
+      isViraPau: false,
+      isIlhos: false,
+      isIlhosEscondidos: false,
+      isOutroAcabamento: false,
+      outroAcabamento: '',
+      isPorAltura: false,
+      isPorMetrosCorridos: false,
+      isPostico: false,
+      isAbertoAoMeio: false,
+      isEncaparCos: false,
+      observations: '',
+      isTrilho: false,
+      isTrilhoCurvo: false,
+      isVaraoVazado: false,
+      isVaraGrossa: false,
+      isVaraMedia: false,
+      isCromado: false,
+      isAcoEscovado: false,
+      isPreto: false,
+      isBranco: false,
+      isBege: false,
+      isTabaco: false,
+      materials: {},
+      installationStatus: '',
+      seamstressName: ''
+    })
     // restaurar foco no elemento de origem
     setTimeout(() => lastFocusedRef.current?.focus(), 0)
   }
