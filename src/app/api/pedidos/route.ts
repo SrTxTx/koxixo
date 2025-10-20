@@ -216,22 +216,70 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const schema = z.object({
       title: z.string().min(1),
-      description: z.string().min(1),
+      description: z.string().optional().nullable(),
       value: z.union([z.number(), z.string()]).optional().nullable(),
       priority: z.string().optional().nullable(),
-      dueDate: z.string().optional().nullable(), // Aceita qualquer string de data
+      dueDate: z.string().optional().nullable(),
+      // Novos campos de cortinas
+      clientName: z.string().optional().nullable(),
+      sellerName: z.string().optional().nullable(),
+      width: z.number().optional().nullable(),
+      height: z.number().optional().nullable(),
+      // Acabamentos
+      isReto: z.boolean().optional(),
+      isSemiReto: z.boolean().optional(),
+      isComPregas: z.boolean().optional(),
+      isViraPau: z.boolean().optional(),
+      isIlhos: z.boolean().optional(),
+      isIlhosEscondidos: z.boolean().optional(),
+      isOutroAcabamento: z.boolean().optional(),
+      outroAcabamento: z.string().optional().nullable(),
+      // Uso do tecido
+      isPorAltura: z.boolean().optional(),
+      isPorMetrosCorridos: z.boolean().optional(),
+      isPostico: z.boolean().optional(),
+      isAbertoAoMeio: z.boolean().optional(),
+      isEncaparCos: z.boolean().optional(),
+      // Observações
+      observations: z.string().optional().nullable(),
+      // Suportes
+      isTrilho: z.boolean().optional(),
+      isTrilhoCurvo: z.boolean().optional(),
+      isVaraoVazado: z.boolean().optional(),
+      isVaraGrossa: z.boolean().optional(),
+      isVaraMedia: z.boolean().optional(),
+      isCromado: z.boolean().optional(),
+      isAcoEscovado: z.boolean().optional(),
+      isPreto: z.boolean().optional(),
+      isBranco: z.boolean().optional(),
+      isBege: z.boolean().optional(),
+      isTabaco: z.boolean().optional(),
+      // Materiais e instalação
+      materials: z.any().optional().nullable(),
+      installationStatus: z.string().optional().nullable(),
+      seamstressName: z.string().optional().nullable(),
     })
     const parsed = schema.safeParse(body)
     if (!parsed.success) {
       logger.warn('Validation error:', parsed.error.message)
       return apiError(400, 'Entrada inválida', { message: parsed.error.message })
     }
-    const { title, description, value, priority, dueDate } = parsed.data
+    const { 
+      title, description, value, priority, dueDate,
+      clientName, sellerName, width, height,
+      isReto, isSemiReto, isComPregas, isViraPau, isIlhos, isIlhosEscondidos, 
+      isOutroAcabamento, outroAcabamento,
+      isPorAltura, isPorMetrosCorridos, isPostico, isAbertoAoMeio, isEncaparCos,
+      observations,
+      isTrilho, isTrilhoCurvo, isVaraoVazado, isVaraGrossa, isVaraMedia,
+      isCromado, isAcoEscovado, isPreto, isBranco, isBege, isTabaco,
+      materials, installationStatus, seamstressName
+    } = parsed.data
 
   logger.debug('Recebido para criar pedido:', body)
 
-    if (!title || !description || !String(title).trim() || !String(description).trim()) {
-      return NextResponse.json({ error: 'Título e descrição são obrigatórios' }, { status: 400 })
+    if (!title || !String(title).trim()) {
+      return NextResponse.json({ error: 'Título é obrigatório' }, { status: 400 })
     }
 
     // Validação robusta dos campos opcionais
@@ -261,12 +309,45 @@ export async function POST(req: NextRequest) {
       order = await withTimeout(prisma.order.create({
         data: {
           title: String(title).trim(),
-          description: String(description).trim(),
+          description: description ? String(description).trim() : null,
           value: finalValue,
           priority: safePriority as any,
           status: 'PENDING' as any,
           createdById: createdById,
           dueDate: finalDueDate,
+          // Novos campos
+          clientName: clientName || null,
+          sellerName: sellerName || null,
+          width: width || null,
+          height: height || null,
+          isReto: isReto || false,
+          isSemiReto: isSemiReto || false,
+          isComPregas: isComPregas || false,
+          isViraPau: isViraPau || false,
+          isIlhos: isIlhos || false,
+          isIlhosEscondidos: isIlhosEscondidos || false,
+          isOutroAcabamento: isOutroAcabamento || false,
+          outroAcabamento: outroAcabamento || null,
+          isPorAltura: isPorAltura || false,
+          isPorMetrosCorridos: isPorMetrosCorridos || false,
+          isPostico: isPostico || false,
+          isAbertoAoMeio: isAbertoAoMeio || false,
+          isEncaparCos: isEncaparCos || false,
+          observations: observations || null,
+          isTrilho: isTrilho || false,
+          isTrilhoCurvo: isTrilhoCurvo || false,
+          isVaraoVazado: isVaraoVazado || false,
+          isVaraGrossa: isVaraGrossa || false,
+          isVaraMedia: isVaraMedia || false,
+          isCromado: isCromado || false,
+          isAcoEscovado: isAcoEscovado || false,
+          isPreto: isPreto || false,
+          isBranco: isBranco || false,
+          isBege: isBege || false,
+          isTabaco: isTabaco || false,
+          materials: materials || null,
+          installationStatus: installationStatus || null,
+          seamstressName: seamstressName || null,
         },
       }), 8000)
     } catch (err: any) {
