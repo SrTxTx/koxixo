@@ -26,6 +26,39 @@ interface Order {
   rejectionReason?: string
   rejectedAt?: string
   rejectedBy?: { name: string }
+  // Novos campos de cortinas
+  clientName?: string
+  sellerName?: string
+  width?: number
+  height?: number
+  isReto?: boolean
+  isSemiReto?: boolean
+  isComPregas?: boolean
+  isViraPau?: boolean
+  isIlhos?: boolean
+  isIlhosEscondidos?: boolean
+  isOutroAcabamento?: boolean
+  outroAcabamento?: string
+  isPorAltura?: boolean
+  isPorMetrosCorridos?: boolean
+  isPostico?: boolean
+  isAbertoAoMeio?: boolean
+  isEncaparCos?: boolean
+  observations?: string
+  isTrilho?: boolean
+  isTrilhoCurvo?: boolean
+  isVaraoVazado?: boolean
+  isVaraGrossa?: boolean
+  isVaraMedia?: boolean
+  isCromado?: boolean
+  isAcoEscovado?: boolean
+  isPreto?: boolean
+  isBranco?: boolean
+  isBege?: boolean
+  isTabaco?: boolean
+  materials?: any
+  installationStatus?: string
+  seamstressName?: string
 }
 
 export default function PedidosPage() {
@@ -797,7 +830,7 @@ export default function PedidosPage() {
       {/* Modal de Detalhes */}
       {viewingOrder && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="order-details-title" onKeyDown={(e) => { if (e.key === 'Escape') setViewingOrder(null) }}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700" tabIndex={-1}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700" tabIndex={-1}>
             <div className="flex justify-between items-start mb-4">
               <h3 id="order-details-title" className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">Detalhes do Pedido #{viewingOrder.id}</h3>
               <button
@@ -811,80 +844,278 @@ export default function PedidosPage() {
               </button>
             </div>
             
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título</label>
-                  <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
-                    {viewingOrder.title}
+            <div className="space-y-6">
+              {/* Informações Básicas */}
+              <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Informações Básicas</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Título</label>
+                    <div className="text-sm text-gray-900 dark:text-gray-100">{viewingOrder.title}</div>
                   </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                  <div className="text-sm">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Status</label>
                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusClass(viewingOrder.status)}`}>
                       {getStatusText(viewingOrder.status)}
                     </span>
                   </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prioridade</label>
-                  <div className={`text-sm p-3 rounded-md ${getPriorityClass(viewingOrder.priority)} bg-gray-50 dark:bg-gray-700` }>
-                    {getPriorityText(viewingOrder.priority)}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Prioridade</label>
+                    <div className={`text-sm ${getPriorityClass(viewingOrder.priority)}`}>
+                      {getPriorityText(viewingOrder.priority)}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Valor</label>
+                    <div className="text-sm text-gray-900 dark:text-gray-100">
+                      {viewingOrder.value ? `R$ ${viewingOrder.value.toFixed(2)}` : 'Não informado'}
+                    </div>
                   </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor</label>
-                  <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
-                    {viewingOrder.value ? `R$ ${viewingOrder.value.toFixed(2)}` : 'Não informado'}
+                {viewingOrder.description && (
+                  <div className="mt-3">
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Descrição</label>
+                    <div className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{viewingOrder.description}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Cliente e Vendedor */}
+              {(viewingOrder.clientName || viewingOrder.sellerName) && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Cliente e Vendedor</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {viewingOrder.clientName && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Cliente</label>
+                        <div className="text-sm text-gray-900 dark:text-gray-100">{viewingOrder.clientName}</div>
+                      </div>
+                    )}
+                    {viewingOrder.sellerName && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Vendedor</label>
+                        <div className="text-sm text-gray-900 dark:text-gray-100">{viewingOrder.sellerName}</div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição</label>
-                <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md min-h-[100px] whitespace-pre-wrap">
-                  {viewingOrder.description || 'Nenhuma descrição fornecida'}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Criado por</label>
-                  <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
-                    {viewingOrder.createdBy.name}
+              {/* Medidas */}
+              {(viewingOrder.width || viewingOrder.height) && (
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Medidas</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {viewingOrder.width && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Largura</label>
+                        <div className="text-sm text-gray-900 dark:text-gray-100">{viewingOrder.width}m</div>
+                      </div>
+                    )}
+                    {viewingOrder.height && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Altura</label>
+                        <div className="text-sm text-gray-900 dark:text-gray-100">{viewingOrder.height}m</div>
+                      </div>
+                    )}
                   </div>
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Editado por</label>
-                  <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
-                    {viewingOrder.lastEditedBy ? viewingOrder.lastEditedBy.name : 'Nunca editado'}
+              )}
+
+              {/* Acabamento */}
+              {(viewingOrder.isReto || viewingOrder.isSemiReto || viewingOrder.isComPregas || 
+                viewingOrder.isViraPau || viewingOrder.isIlhos || viewingOrder.isIlhosEscondidos || 
+                viewingOrder.isOutroAcabamento) && (
+                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Tipo de Acabamento</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingOrder.isReto && <span className="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs rounded-full">Reto</span>}
+                    {viewingOrder.isSemiReto && <span className="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs rounded-full">Semi-Reto</span>}
+                    {viewingOrder.isComPregas && <span className="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs rounded-full">Com Pregas</span>}
+                    {viewingOrder.isViraPau && <span className="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs rounded-full">Vira Pau</span>}
+                    {viewingOrder.isIlhos && <span className="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs rounded-full">Ilhós</span>}
+                    {viewingOrder.isIlhosEscondidos && <span className="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs rounded-full">Ilhós Escondidos</span>}
+                    {viewingOrder.isOutroAcabamento && <span className="px-3 py-1 bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-100 text-xs rounded-full">{viewingOrder.outroAcabamento || 'Outro'}</span>}
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data de Criação</label>
-                <div className="text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
-                  {new Date(viewingOrder.createdAt).toLocaleString('pt-BR')}
+              {/* Uso do Tecido */}
+              {(viewingOrder.isPorAltura || viewingOrder.isPorMetrosCorridos || viewingOrder.isPostico || 
+                viewingOrder.isAbertoAoMeio || viewingOrder.isEncaparCos) && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Uso do Tecido</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingOrder.isPorAltura && <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100 text-xs rounded-full">Por Altura</span>}
+                    {viewingOrder.isPorMetrosCorridos && <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100 text-xs rounded-full">Por Metros Corridos</span>}
+                    {viewingOrder.isPostico && <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100 text-xs rounded-full">Póstico</span>}
+                    {viewingOrder.isAbertoAoMeio && <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100 text-xs rounded-full">Aberto ao Meio</span>}
+                    {viewingOrder.isEncaparCos && <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100 text-xs rounded-full">Encapar Cos</span>}
+                  </div>
+                </div>
+              )}
+
+              {/* Observações */}
+              {viewingOrder.observations && (
+                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Observações</h4>
+                  <div className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
+                    {viewingOrder.observations}
+                  </div>
+                </div>
+              )}
+
+              {/* Tipo de Suporte e Cores */}
+              {(viewingOrder.isTrilho || viewingOrder.isTrilhoCurvo || viewingOrder.isVaraoVazado || 
+                viewingOrder.isVaraGrossa || viewingOrder.isVaraMedia || viewingOrder.isCromado || 
+                viewingOrder.isAcoEscovado || viewingOrder.isPreto || viewingOrder.isBranco || 
+                viewingOrder.isBege || viewingOrder.isTabaco) && (
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Tipo de Suporte e Cores</h4>
+                  <div className="space-y-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Tipo de Suporte</label>
+                      <div className="flex flex-wrap gap-2">
+                        {viewingOrder.isTrilho && <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-100 text-xs rounded-full">Trilho</span>}
+                        {viewingOrder.isTrilhoCurvo && <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-100 text-xs rounded-full">Trilho Curvo</span>}
+                        {viewingOrder.isVaraoVazado && <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-100 text-xs rounded-full">Varão Vazado</span>}
+                        {viewingOrder.isVaraGrossa && <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-100 text-xs rounded-full">Vara Grossa</span>}
+                        {viewingOrder.isVaraMedia && <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-100 text-xs rounded-full">Vara Média</span>}
+                      </div>
+                    </div>
+                    {(viewingOrder.isCromado || viewingOrder.isAcoEscovado || viewingOrder.isPreto || 
+                      viewingOrder.isBranco || viewingOrder.isBege || viewingOrder.isTabaco) && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Cores</label>
+                        <div className="flex flex-wrap gap-2">
+                          {viewingOrder.isCromado && <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 text-xs rounded-full">Cromado</span>}
+                          {viewingOrder.isAcoEscovado && <span className="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-100 text-xs rounded-full">Aço Escovado</span>}
+                          {viewingOrder.isPreto && <span className="px-3 py-1 bg-gray-800 text-white text-xs rounded-full">Preto</span>}
+                          {viewingOrder.isBranco && <span className="px-3 py-1 bg-white dark:bg-gray-200 text-gray-800 border border-gray-300 text-xs rounded-full">Branco</span>}
+                          {viewingOrder.isBege && <span className="px-3 py-1 bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-100 text-xs rounded-full">Bege</span>}
+                          {viewingOrder.isTabaco && <span className="px-3 py-1 bg-amber-700 text-white text-xs rounded-full">Tabaco</span>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Materiais */}
+              {viewingOrder.materials && (
+                <div className="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Materiais</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-teal-100 dark:bg-teal-800">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-200">Material</th>
+                          <th className="px-3 py-2 text-center text-xs font-medium text-gray-700 dark:text-gray-200">Qtd. Orçada</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {viewingOrder.materials.entrelela?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Entrelela</td><td className="px-3 py-2 text-center">{viewingOrder.materials.entrelela.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.franzidor?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Franzidor</td><td className="px-3 py-2 text-center">{viewingOrder.materials.franzidor.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.ganchosPlastico?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Ganchos de Plástico</td><td className="px-3 py-2 text-center">{viewingOrder.materials.ganchosPlastico.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.ganchosMetal?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Ganchos de Metal</td><td className="px-3 py-2 text-center">{viewingOrder.materials.ganchosMetal.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.linha?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Linha</td><td className="px-3 py-2 text-center">{viewingOrder.materials.linha.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.argolasPlastico?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Argolas de Plástico</td><td className="px-3 py-2 text-center">{viewingOrder.materials.argolasPlastico.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.argolasMetal?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Argolas de Metal</td><td className="px-3 py-2 text-center">{viewingOrder.materials.argolasMetal.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.cinta?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Cinta</td><td className="px-3 py-2 text-center">{viewingOrder.materials.cinta.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.barraChumbada?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Barra Chumbada</td><td className="px-3 py-2 text-center">{viewingOrder.materials.barraChumbada.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.ilhos?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Ilhós</td><td className="px-3 py-2 text-center">{viewingOrder.materials.ilhos.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.velcro?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Velcro</td><td className="px-3 py-2 text-center">{viewingOrder.materials.velcro.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.imaMaoFrancesa?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Imã Mão Francesa</td><td className="px-3 py-2 text-center">{viewingOrder.materials.imaMaoFrancesa.orcada}</td></tr>
+                        )}
+                        {viewingOrder.materials.outros?.orcada > 0 && (
+                          <tr><td className="px-3 py-2">Outros</td><td className="px-3 py-2 text-center">{viewingOrder.materials.outros.orcada}</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Instalação */}
+              {(viewingOrder.installationStatus || viewingOrder.seamstressName) && (
+                <div className="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-lg">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Instalação</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {viewingOrder.installationStatus && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Status da Instalação</label>
+                        <div className="text-sm text-gray-900 dark:text-gray-100">{viewingOrder.installationStatus}</div>
+                      </div>
+                    )}
+                    {viewingOrder.seamstressName && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Costureira</label>
+                        <div className="text-sm text-gray-900 dark:text-gray-100">{viewingOrder.seamstressName}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Informações do Sistema */}
+              <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Informações do Sistema</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Criado por</label>
+                    <div className="text-sm text-gray-900 dark:text-gray-100">{viewingOrder.createdBy.name}</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Data de Criação</label>
+                    <div className="text-sm text-gray-900 dark:text-gray-100">{new Date(viewingOrder.createdAt).toLocaleString('pt-BR')}</div>
+                  </div>
+                  {viewingOrder.lastEditedBy && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Editado por</label>
+                        <div className="text-sm text-gray-900 dark:text-gray-100">{viewingOrder.lastEditedBy.name}</div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Data da Edição</label>
+                        <div className="text-sm text-gray-900 dark:text-gray-100">{viewingOrder.lastEditedAt ? new Date(viewingOrder.lastEditedAt).toLocaleString('pt-BR') : '-'}</div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
+              {/* Rejeição */}
               {viewingOrder.status === 'REJECTED' && viewingOrder.rejectionReason && (
-                <div>
-                  <label className="block text-sm font-medium text-red-700 mb-1">Motivo da Rejeição</label>
-                  <div className="text-sm text-red-900 bg-red-50 border border-red-200 p-3 rounded-md">
-                    {viewingOrder.rejectionReason}
-                  </div>
+                <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded">
+                  <h4 className="text-md font-semibold text-red-800 dark:text-red-300 mb-2">Motivo da Rejeição</h4>
+                  <div className="text-sm text-red-900 dark:text-red-200">{viewingOrder.rejectionReason}</div>
                   {viewingOrder.rejectedAt && (
-                    <div className="text-xs text-red-600 mt-1">
+                    <div className="text-xs text-red-600 dark:text-red-400 mt-2">
                       Rejeitado em: {new Date(viewingOrder.rejectedAt).toLocaleString('pt-BR')}
+                      {viewingOrder.rejectedBy && ` por ${viewingOrder.rejectedBy.name}`}
                     </div>
                   )}
                 </div>
