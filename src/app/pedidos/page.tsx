@@ -114,7 +114,40 @@ export default function PedidosPage() {
     title: '',
     description: '',
     priority: 'MEDIUM',
-    value: ''
+    value: '',
+    // Campos de cortinas
+    clientName: '',
+    sellerName: '',
+    width: '',
+    height: '',
+    isReto: false,
+    isSemiReto: false,
+    isComPregas: false,
+    isViraPau: false,
+    isIlhos: false,
+    isIlhosEscondidos: false,
+    isOutroAcabamento: false,
+    outroAcabamento: '',
+    isPorAltura: false,
+    isPorMetrosCorridos: false,
+    isPostico: false,
+    isAbertoAoMeio: false,
+    isEncaparCos: false,
+    observations: '',
+    isTrilho: false,
+    isTrilhoCurvo: false,
+    isVaraoVazado: false,
+    isVaraGrossa: false,
+    isVaraMedia: false,
+    isCromado: false,
+    isAcoEscovado: false,
+    isPreto: false,
+    isBranco: false,
+    isBege: false,
+    isTabaco: false,
+    materials: {},
+    installationStatus: '',
+    seamstressName: ''
   })
 
   const fetcher = async (url: string) => {
@@ -214,7 +247,40 @@ export default function PedidosPage() {
       title: order.title,
       description: order.description || '',
       priority: order.priority,
-      value: order.value?.toString() || ''
+      value: order.value?.toString() || '',
+      // Campos de cortinas
+      clientName: order.clientName || '',
+      sellerName: order.sellerName || '',
+      width: order.width?.toString() || '',
+      height: order.height?.toString() || '',
+      isReto: order.isReto || false,
+      isSemiReto: order.isSemiReto || false,
+      isComPregas: order.isComPregas || false,
+      isViraPau: order.isViraPau || false,
+      isIlhos: order.isIlhos || false,
+      isIlhosEscondidos: order.isIlhosEscondidos || false,
+      isOutroAcabamento: order.isOutroAcabamento || false,
+      outroAcabamento: order.outroAcabamento || '',
+      isPorAltura: order.isPorAltura || false,
+      isPorMetrosCorridos: order.isPorMetrosCorridos || false,
+      isPostico: order.isPostico || false,
+      isAbertoAoMeio: order.isAbertoAoMeio || false,
+      isEncaparCos: order.isEncaparCos || false,
+      observations: order.observations || '',
+      isTrilho: order.isTrilho || false,
+      isTrilhoCurvo: order.isTrilhoCurvo || false,
+      isVaraoVazado: order.isVaraoVazado || false,
+      isVaraGrossa: order.isVaraGrossa || false,
+      isVaraMedia: order.isVaraMedia || false,
+      isCromado: order.isCromado || false,
+      isAcoEscovado: order.isAcoEscovado || false,
+      isPreto: order.isPreto || false,
+      isBranco: order.isBranco || false,
+      isBege: order.isBege || false,
+      isTabaco: order.isTabaco || false,
+      materials: order.materials || {},
+      installationStatus: order.installationStatus || '',
+      seamstressName: order.seamstressName || ''
     })
   }
 
@@ -232,14 +298,85 @@ export default function PedidosPage() {
           title: editForm.title,
           description: editForm.description,
           priority: editForm.priority,
-          value: editForm.value ? parseFloat(editForm.value) : null
+          value: editForm.value ? parseFloat(editForm.value) : null,
+          // Campos de cortinas
+          clientName: editForm.clientName || null,
+          sellerName: editForm.sellerName || null,
+          width: editForm.width ? parseFloat(editForm.width) : null,
+          height: editForm.height ? parseFloat(editForm.height) : null,
+          isReto: editForm.isReto,
+          isSemiReto: editForm.isSemiReto,
+          isComPregas: editForm.isComPregas,
+          isViraPau: editForm.isViraPau,
+          isIlhos: editForm.isIlhos,
+          isIlhosEscondidos: editForm.isIlhosEscondidos,
+          isOutroAcabamento: editForm.isOutroAcabamento,
+          outroAcabamento: editForm.outroAcabamento || null,
+          isPorAltura: editForm.isPorAltura,
+          isPorMetrosCorridos: editForm.isPorMetrosCorridos,
+          isPostico: editForm.isPostico,
+          isAbertoAoMeio: editForm.isAbertoAoMeio,
+          isEncaparCos: editForm.isEncaparCos,
+          observations: editForm.observations || null,
+          isTrilho: editForm.isTrilho,
+          isTrilhoCurvo: editForm.isTrilhoCurvo,
+          isVaraoVazado: editForm.isVaraoVazado,
+          isVaraGrossa: editForm.isVaraGrossa,
+          isVaraMedia: editForm.isVaraMedia,
+          isCromado: editForm.isCromado,
+          isAcoEscovado: editForm.isAcoEscovado,
+          isPreto: editForm.isPreto,
+          isBranco: editForm.isBranco,
+          isBege: editForm.isBege,
+          isTabaco: editForm.isTabaco,
+          materials: editForm.materials,
+          installationStatus: editForm.installationStatus || null,
+          seamstressName: editForm.seamstressName || null
         }),
       })
 
       if (response.ok) {
   await mutate()
         setEditingOrder(null)
-        setEditForm({ title: '', description: '', priority: 'MEDIUM', value: '' })
+        // Reset completo do formulário
+        setEditForm({
+          title: '',
+          description: '',
+          priority: 'MEDIUM',
+          value: '',
+          clientName: '',
+          sellerName: '',
+          width: '',
+          height: '',
+          isReto: false,
+          isSemiReto: false,
+          isComPregas: false,
+          isViraPau: false,
+          isIlhos: false,
+          isIlhosEscondidos: false,
+          isOutroAcabamento: false,
+          outroAcabamento: '',
+          isPorAltura: false,
+          isPorMetrosCorridos: false,
+          isPostico: false,
+          isAbertoAoMeio: false,
+          isEncaparCos: false,
+          observations: '',
+          isTrilho: false,
+          isTrilhoCurvo: false,
+          isVaraoVazado: false,
+          isVaraGrossa: false,
+          isVaraMedia: false,
+          isCromado: false,
+          isAcoEscovado: false,
+          isPreto: false,
+          isBranco: false,
+          isBege: false,
+          isTabaco: false,
+          materials: {},
+          installationStatus: '',
+          seamstressName: ''
+        })
       } else {
         const data = await response.json()
         if (response.status === 401) {
@@ -1163,76 +1300,210 @@ export default function PedidosPage() {
       {/* Modal de Edição */}
       {editingOrder && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="order-edit-title" onKeyDown={(e) => { if (e.key === 'Escape') handleCancelEdit() }}>
-          <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700" tabIndex={-1}>
-            <h3 id="order-edit-title" className="text-lg font-semibold mb-4">Editar Pedido #{editingOrder.id}</h3>
+          <div ref={modalRef} className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-6xl max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700" tabIndex={-1}>
+            <h3 id="order-edit-title" className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Editar Pedido #{editingOrder.id}</h3>
             
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Título do Pedido
-                </label>
-                <input
-                  type="text"
-                  value={editForm.title}
-                  onChange={(e) => setEditForm({...editForm, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100"
-                />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Coluna 1 - Informações Básicas e Cliente */}
+              <div className="space-y-4">
+                {/* Informações Básicas */}
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Informações Básicas</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título do Pedido</label>
+                      <input type="text" value={editForm.title} onChange={(e) => setEditForm({...editForm, title: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição</label>
+                      <textarea rows={2} value={editForm.description} onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 resize-vertical dark:bg-gray-700 dark:text-gray-100"
+                        placeholder="Descreva os detalhes do pedido..." />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prioridade</label>
+                        <select value={editForm.priority} onChange={(e) => setEditForm({...editForm, priority: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100">
+                          <option value="LOW">Baixa</option>
+                          <option value="MEDIUM">Média</option>
+                          <option value="HIGH">Alta</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor (R$)</label>
+                        <input type="number" step="0.01" value={editForm.value} onChange={(e) => setEditForm({...editForm, value: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cliente e Vendedor */}
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Cliente e Vendedor</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome do Cliente</label>
+                      <input type="text" value={editForm.clientName} onChange={(e) => setEditForm({...editForm, clientName: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome do Vendedor</label>
+                      <input type="text" value={editForm.sellerName} onChange={(e) => setEditForm({...editForm, sellerName: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Medidas */}
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Medidas</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Largura (m)</label>
+                      <input type="number" step="0.01" value={editForm.width} onChange={(e) => setEditForm({...editForm, width: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Altura (m)</label>
+                      <input type="number" step="0.01" value={editForm.height} onChange={(e) => setEditForm({...editForm, height: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Acabamento */}
+                <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Tipo de Acabamento</h4>
+                  <div className="space-y-2">
+                    {[
+                      { key: 'isReto', label: 'Reto' },
+                      { key: 'isSemiReto', label: 'Semi-Reto' },
+                      { key: 'isComPregas', label: 'Com Pregas' },
+                      { key: 'isViraPau', label: 'Vira Pau' },
+                      { key: 'isIlhos', label: 'Ilhós' },
+                      { key: 'isIlhosEscondidos', label: 'Ilhós Escondidos' },
+                      { key: 'isOutroAcabamento', label: 'Outro' }
+                    ].map(item => (
+                      <label key={item.key} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={editForm[item.key as keyof typeof editForm] as boolean}
+                          onChange={(e) => setEditForm({...editForm, [item.key]: e.target.checked})}
+                          className="rounded border-gray-300 text-red-600 focus:ring-red-500" />
+                        <span className="text-gray-700 dark:text-gray-300">{item.label}</span>
+                      </label>
+                    ))}
+                    {editForm.isOutroAcabamento && (
+                      <input type="text" value={editForm.outroAcabamento} onChange={(e) => setEditForm({...editForm, outroAcabamento: e.target.value})}
+                        placeholder="Especifique outro acabamento"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100 text-sm" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Instalação */}
+                <div className="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Instalação</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status da Instalação</label>
+                      <input type="text" value={editForm.installationStatus} onChange={(e) => setEditForm({...editForm, installationStatus: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome da Costureira</label>
+                      <input type="text" value={editForm.seamstressName} onChange={(e) => setEditForm({...editForm, seamstressName: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100" />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Descrição
-                </label>
-                <textarea
-                  rows={3}
-                  value={editForm.description}
-                  onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 resize-vertical dark:bg-gray-700 dark:text-gray-100"
-                  placeholder="Descreva os detalhes do pedido..."
-                />
-              </div>
+              {/* Coluna 2 - Uso do Tecido, Suporte e Observações */}
+              <div className="space-y-4">
+                {/* Uso do Tecido */}
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Uso do Tecido</h4>
+                  <div className="space-y-2">
+                    {[
+                      { key: 'isPorAltura', label: 'Por Altura' },
+                      { key: 'isPorMetrosCorridos', label: 'Por Metros Corridos' },
+                      { key: 'isPostico', label: 'Póstico' },
+                      { key: 'isAbertoAoMeio', label: 'Aberto ao Meio' },
+                      { key: 'isEncaparCos', label: 'Encapar Cos' }
+                    ].map(item => (
+                      <label key={item.key} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={editForm[item.key as keyof typeof editForm] as boolean}
+                          onChange={(e) => setEditForm({...editForm, [item.key]: e.target.checked})}
+                          className="rounded border-gray-300 text-red-600 focus:ring-red-500" />
+                        <span className="text-gray-700 dark:text-gray-300">{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Prioridade
-                </label>
-                <select
-                  value={editForm.priority}
-                  onChange={(e) => setEditForm({...editForm, priority: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100"
-                >
-                  <option value="LOW">Baixa</option>
-                  <option value="MEDIUM">Média</option>
-                  <option value="HIGH">Alta</option>
-                </select>
-              </div>
+                {/* Tipo de Suporte */}
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Tipo de Suporte</h4>
+                  <div className="space-y-2">
+                    {[
+                      { key: 'isTrilho', label: 'Trilho' },
+                      { key: 'isTrilhoCurvo', label: 'Trilho Curvo' },
+                      { key: 'isVaraoVazado', label: 'Varão Vazado' },
+                      { key: 'isVaraGrossa', label: 'Vara Grossa' },
+                      { key: 'isVaraMedia', label: 'Vara Média' }
+                    ].map(item => (
+                      <label key={item.key} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={editForm[item.key as keyof typeof editForm] as boolean}
+                          onChange={(e) => setEditForm({...editForm, [item.key]: e.target.checked})}
+                          className="rounded border-gray-300 text-red-600 focus:ring-red-500" />
+                        <span className="text-gray-700 dark:text-gray-300">{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Valor (R$)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={editForm.value}
-                  onChange={(e) => setEditForm({...editForm, value: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100"
-                />
+                {/* Cores */}
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Cores</h4>
+                  <div className="space-y-2">
+                    {[
+                      { key: 'isCromado', label: 'Cromado' },
+                      { key: 'isAcoEscovado', label: 'Aço Escovado' },
+                      { key: 'isPreto', label: 'Preto' },
+                      { key: 'isBranco', label: 'Branco' },
+                      { key: 'isBege', label: 'Bege' },
+                      { key: 'isTabaco', label: 'Tabaco' }
+                    ].map(item => (
+                      <label key={item.key} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={editForm[item.key as keyof typeof editForm] as boolean}
+                          onChange={(e) => setEditForm({...editForm, [item.key]: e.target.checked})}
+                          className="rounded border-gray-300 text-red-600 focus:ring-red-500" />
+                        <span className="text-gray-700 dark:text-gray-300">{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Observações */}
+                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Observações</h4>
+                  <textarea rows={4} value={editForm.observations} onChange={(e) => setEditForm({...editForm, observations: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 resize-vertical dark:bg-gray-700 dark:text-gray-100"
+                    placeholder="Observações adicionais sobre o pedido..." />
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-end space-x-4 mt-6">
-              <button
-                onClick={handleCancelEdit}
-                className="px-6 py-2.5 text-gray-600 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
-              >
+            <div className="flex justify-end space-x-4 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <button onClick={handleCancelEdit}
+                className="px-6 py-2.5 text-gray-600 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium">
                 Cancelar
               </button>
-              <button
-                onClick={handleSaveEdit}
-                className="px-6 py-2.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium"
-              >
-                Salvar
+              <button onClick={handleSaveEdit}
+                className="px-6 py-2.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors font-medium">
+                Salvar Alterações
               </button>
             </div>
           </div>
