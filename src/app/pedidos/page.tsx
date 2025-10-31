@@ -59,6 +59,7 @@ interface Order {
   materials?: any
   installationStatus?: string
   seamstressName?: string
+  dueDate?: string
 }
 
 export default function PedidosPage() {
@@ -115,6 +116,7 @@ export default function PedidosPage() {
     description: '',
     priority: 'MEDIUM',
     value: '',
+    dueDate: '',
     // Campos de cortinas
     clientName: '',
     sellerName: '',
@@ -246,6 +248,7 @@ export default function PedidosPage() {
     setEditForm({
       title: order.title,
       description: order.description || '',
+      dueDate: order.dueDate ? new Date(order.dueDate).toISOString().slice(0,10) : '',
       priority: order.priority,
       value: order.value?.toString() || '',
       // Campos de cortinas
@@ -299,6 +302,7 @@ export default function PedidosPage() {
           description: editForm.description,
           priority: editForm.priority,
           value: editForm.value ? parseFloat(editForm.value) : null,
+          dueDate: editForm.dueDate ? new Date(editForm.dueDate).toISOString() : null,
           // Campos de cortinas
           clientName: editForm.clientName || null,
           sellerName: editForm.sellerName || null,
@@ -344,6 +348,7 @@ export default function PedidosPage() {
           description: '',
           priority: 'MEDIUM',
           value: '',
+          dueDate: '',
           clientName: '',
           sellerName: '',
           width: '',
@@ -398,6 +403,7 @@ export default function PedidosPage() {
       description: '',
       priority: 'MEDIUM',
       value: '',
+      dueDate: '',
       clientName: '',
       sellerName: '',
       width: '',
@@ -1523,13 +1529,54 @@ export default function PedidosPage() {
                   </div>
                 </div>
 
-                {/* Observações */}
-                <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Observações</h4>
-                  <textarea rows={4} value={editForm.observations} onChange={(e) => setEditForm({...editForm, observations: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 resize-vertical dark:bg-gray-700 dark:text-gray-100"
-                    placeholder="Observações adicionais sobre o pedido..." />
-                </div>
+                  {/* Materiais */}
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Materiais (Orçado)</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {[
+                        { key: 'tecido', label: 'Tecido (m)', step: '0.01' },
+                        { key: 'postico', label: 'Póstico (un)', step: '1' },
+                        { key: 'entrelinha', label: 'Entrelinha (un)', step: '1' },
+                        { key: 'franzidor', label: 'Franzidor (un)', step: '1' },
+                        { key: 'entretela', label: 'Entretela (un)', step: '1' },
+                        { key: 'ilhos', label: 'Ilhós (un)', step: '1' },
+                        { key: 'argolas', label: 'Argolas (un)', step: '1' },
+                        { key: 'argolasPlastico', label: 'Argolas Plástico (un)', step: '1' },
+                        { key: 'argolasMetal', label: 'Argolas Metal (un)', step: '1' },
+                        { key: 'ganchosMetal', label: 'Ganchos Metal (un)', step: '1' },
+                        { key: 'linha', label: 'Linha (un)', step: '1' },
+                        { key: 'cinta', label: 'Cinta (un)', step: '1' },
+                        { key: 'barraChumbada', label: 'Barra Chumbada (un)', step: '1' },
+                        { key: 'velcro', label: 'Velcro (un)', step: '1' },
+                        { key: 'imaMaoFrancesa', label: 'Imã Mão Francesa (un)', step: '1' },
+                        { key: 'deslizantes', label: 'Deslizantes (un)', step: '1' },
+                        { key: 'fitaWave', label: 'Fita Wave (un)', step: '1' },
+                        { key: 'cordaoWave', label: 'Cordão Wave (un)', step: '1' },
+                        { key: 'terminal', label: 'Terminal (un)', step: '1' },
+                        { key: 'personalizado1', label: 'Personalizado 1 (un)', step: '1' },
+                        { key: 'personalizado2', label: 'Personalizado 2 (un)', step: '1' },
+                        { key: 'outros', label: 'Outros (un)', step: '1' }
+                      ].map(item => (
+                        <div key={item.key}>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{item.label}</label>
+                          <input type="number" step={item.step} value={editForm.materials?.[item.key]?.orcada ?? ''}
+                            onChange={(e) => {
+                              const v = e.target.value
+                              setEditForm({...editForm, materials: { ...(editForm.materials || {}), [item.key]: { ...(editForm.materials?.[item.key] || {}), orcada: v ? parseFloat(v) : 0 } }})
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Observações */}
+                  <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Observações</h4>
+                    <textarea rows={4} value={editForm.observations} onChange={(e) => setEditForm({...editForm, observations: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 resize-vertical dark:bg-gray-700 dark:text-gray-100"
+                      placeholder="Observações adicionais sobre o pedido..." />
+                  </div>
               </div>
             </div>
 
