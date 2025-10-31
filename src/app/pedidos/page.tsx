@@ -1194,8 +1194,11 @@ export default function PedidosPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {viewingOrder.materials.entrelela?.orcada > 0 && (
-                          <tr><td className="px-3 py-2">Entrelela</td><td className="px-3 py-2 text-center">{viewingOrder.materials.entrelela.orcada}</td></tr>
+                        { (viewingOrder.materials.entrelinha || viewingOrder.materials.entrelela) && ( (viewingOrder.materials.entrelinha?.orcada || viewingOrder.materials.entrelela?.orcada) > 0 ) && (
+                          <tr>
+                            <td className="px-3 py-2">Entrelinha</td>
+                            <td className="px-3 py-2 text-center">{(viewingOrder.materials.entrelinha?.orcada ?? viewingOrder.materials.entrelela?.orcada) || 0}</td>
+                          </tr>
                         )}
                         {viewingOrder.materials.franzidor?.orcada > 0 && (
                           <tr><td className="px-3 py-2">Franzidor</td><td className="px-3 py-2 text-center">{viewingOrder.materials.franzidor.orcada}</td></tr>

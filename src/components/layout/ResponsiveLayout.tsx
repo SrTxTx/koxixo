@@ -245,7 +245,7 @@ export function ResponsiveLayout({
                 <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
                   <User className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                 </div>
-                <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">Admin</span>
+                <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">{session?.user?.name ?? session?.user?.email ?? 'Usuário'}</span>
               </button>
             </div>
           </div>
